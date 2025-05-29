@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { ChartGantt, Eye, EyeOff } from "lucide-react";
-import { useAuthJWT } from "@/hooks/useAuthJWT";
+import { ChartGantt } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Register() {
@@ -12,114 +9,100 @@ export default function Register() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const { register, registerError, isRegistering } = useAuthJWT();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    register({ firstName, lastName, email, password });
+    // For now, just redirect to home - we'll implement JWT later
+    window.location.href = "/";
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center space-x-3 mb-8">
-          <ChartGantt className="h-10 w-10 text-primary" />
+          <ChartGantt className="h-10 w-10 text-blue-600" />
           <h1 className="text-3xl font-bold text-gray-900">DSA Visualizer</h1>
         </div>
 
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Create account</CardTitle>
-            <CardDescription className="text-center">
-              Enter your information to create your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First name</Label>
-                  <Input
-                    id="firstName"
-                    placeholder="John"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last name</Label>
-                  <Input
-                    id="lastName"
-                    placeholder="Doe"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold text-center mb-2">Create account</h2>
+          <p className="text-gray-600 text-center mb-6">
+            Enter your information to create your account
+          </p>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  First name
+                </label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="firstName"
+                  placeholder="John"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                   required
+                  className="w-full"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password (min. 6 characters)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    minLength={6}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Last name
+                </label>
+                <Input
+                  id="lastName"
+                  placeholder="Doe"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className="w-full"
+                />
               </div>
-
-              {registerError && (
-                <div className="text-red-600 text-sm text-center">
-                  {registerError.message}
-                </div>
-              )}
-
-              <Button type="submit" className="w-full" disabled={isRegistering}>
-                {isRegistering ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">Already have an account? </span>
-              <Link href="/login">
-                <a className="text-primary hover:underline font-medium">
-                  Sign in
-                </a>
-              </Link>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password (min. 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                required
+                className="w-full"
+              />
+            </div>
+
+            <Button type="submit" className="w-full">
+              Create account
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm">
+            <span className="text-gray-600">Already have an account? </span>
+            <Link href="/login">
+              <a className="text-blue-600 hover:underline font-medium">
+                Sign in
+              </a>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
