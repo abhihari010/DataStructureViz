@@ -35,9 +35,10 @@ export function useAuthJWT() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('jwt_token'));
   const queryClient = useQueryClient();
 
+  // Temporarily simulate authentication until Spring Boot backend is ready
   const { data: user, isLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
-    enabled: !!token,
+    enabled: false, // Disable for now
     retry: false,
   });
 
@@ -118,10 +119,18 @@ export function useAuthJWT() {
     }
   }, [token, queryClient]);
 
+  // Temporarily simulate a logged-in user for testing
+  const simulatedUser: User = {
+    id: "1",
+    email: "test@example.com", 
+    firstName: "Test",
+    lastName: "User"
+  };
+
   return {
-    user,
-    isLoading,
-    isAuthenticated: !!user && !!token,
+    user: simulatedUser, // Return simulated user until backend is ready
+    isLoading: false,
+    isAuthenticated: true, // Temporarily return true
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout,
