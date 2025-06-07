@@ -3,7 +3,6 @@ package com.dsavisualizer.service;
 import com.dsavisualizer.entity.User;
 import com.dsavisualizer.entity.UserProgress;
 import com.dsavisualizer.repository.UserProgressRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -13,8 +12,11 @@ import java.util.Optional;
 @Service
 public class UserProgressService {
 
-    @Autowired
-    private UserProgressRepository userProgressRepository;
+    private final UserProgressRepository userProgressRepository;
+
+    public UserProgressService(UserProgressRepository userProgressRepository) {
+        this.userProgressRepository = userProgressRepository;
+    }
 
     public List<UserProgress> getUserProgress(String userId) {
         return userProgressRepository.findByUserIdOrderByUpdatedAtDesc(userId);

@@ -9,8 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private PracticeProblemRepository practiceProblemRepository;
+    private final PracticeProblemRepository practiceProblemRepository;
+
+    public DataInitializer(PracticeProblemRepository practiceProblemRepository) {
+        this.practiceProblemRepository = practiceProblemRepository;
+    }
 
     @Override
     public void run(String... args) throws Exception {

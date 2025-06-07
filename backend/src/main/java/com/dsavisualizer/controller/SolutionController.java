@@ -5,7 +5,6 @@ import com.dsavisualizer.entity.User;
 import com.dsavisualizer.entity.UserSolution;
 import com.dsavisualizer.repository.PracticeProblemRepository;
 import com.dsavisualizer.repository.UserSolutionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +16,13 @@ import java.util.Map;
 @RequestMapping("/solutions")
 public class SolutionController {
 
-    @Autowired
-    private UserSolutionRepository userSolutionRepository;
+    private final UserSolutionRepository userSolutionRepository;
+    private final PracticeProblemRepository practiceProblemRepository;
 
-    @Autowired
-    private PracticeProblemRepository practiceProblemRepository;
+    public SolutionController(UserSolutionRepository userSolutionRepository, PracticeProblemRepository practiceProblemRepository) {
+        this.userSolutionRepository = userSolutionRepository;
+        this.practiceProblemRepository = practiceProblemRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<UserSolution>> getUserSolutions(

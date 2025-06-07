@@ -2,7 +2,6 @@ package com.dsavisualizer.controller;
 
 import com.dsavisualizer.entity.PracticeProblem;
 import com.dsavisualizer.repository.PracticeProblemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,8 +12,11 @@ import java.util.Optional;
 @RequestMapping("/problems")
 public class ProblemController {
 
-    @Autowired
-    private PracticeProblemRepository practiceProblemRepository;
+    private final PracticeProblemRepository practiceProblemRepository;
+
+    public ProblemController(PracticeProblemRepository practiceProblemRepository) {
+        this.practiceProblemRepository = practiceProblemRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<PracticeProblem>> getProblems(@RequestParam(required = false) String topicId) {

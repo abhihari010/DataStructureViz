@@ -3,7 +3,6 @@ package com.dsavisualizer.controller;
 import com.dsavisualizer.entity.User;
 import com.dsavisualizer.entity.UserProgress;
 import com.dsavisualizer.service.UserProgressService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +14,11 @@ import java.util.Map;
 @RequestMapping("/progress")
 public class ProgressController {
 
-    @Autowired
-    private UserProgressService userProgressService;
+    private final UserProgressService userProgressService;
+
+    public ProgressController(UserProgressService userProgressService) {
+        this.userProgressService = userProgressService;
+    }
 
     @GetMapping
     public ResponseEntity<List<UserProgress>> getUserProgress(Authentication authentication) {

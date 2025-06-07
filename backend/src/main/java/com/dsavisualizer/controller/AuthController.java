@@ -19,14 +19,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    UserService userService;
-
-    @Autowired
-    JwtUtil jwtUtil;
+    public AuthController(AuthenticationManager authenticationManager, UserService userService, JwtUtil jwtUtil) {
+        this.authenticationManager = authenticationManager;
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
