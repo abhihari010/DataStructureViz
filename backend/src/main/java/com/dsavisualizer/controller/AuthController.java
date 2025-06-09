@@ -1,72 +1,141 @@
 package com.dsavisualizer.controller;
 
-import com.dsavisualizer.dto.JwtResponse;
 import com.dsavisualizer.dto.LoginRequest;
 import com.dsavisualizer.dto.RegisterRequest;
 import com.dsavisualizer.entity.User;
 import com.dsavisualizer.security.JwtUtil;
 import com.dsavisualizer.service.UserService;
+import com.dsavisualizer.service.VerificationTokenService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
+    private final VerificationTokenService verificationTokenService;
 
-    public AuthController(AuthenticationManager authenticationManager, UserService userService, JwtUtil jwtUtil) {
+    public AuthController(AuthenticationManager authenticationManager,
+                         JwtUtil jwtUtil,
+                         UserService userService,
+                         VerificationTokenService verificationTokenService) {
         this.authenticationManager = authenticationManager;
-        this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.userService = userService;
+        this.verificationTokenService = verificationTokenService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        User user = userService.createUser(registerRequest);
+        verificationTokenService.createVerificationToken(user);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Registration successful! Please check your email to verify your account.");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtil.generateToken((User) authentication.getPrincipal());
+            new UsernamePasswordAuthenticationToken(
+                loginRequest.getEmail(),
+                loginRequest.getPassword()
+            )
+        );
 
         User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getEmail(), 
-                                                user.getFirstName(), user.getLastName()));
+        if (!user.isEmailVerified()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Please verify your email before logging in.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        String jwt = jwtUtil.generateToken(user);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", jwt);
+        response.put("type", "Bearer");
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("firstName", user.getFirstName());
+        response.put("lastName", user.getLastName());
+        
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        try {
-            User user = userService.createUser(
-                registerRequest.getFirstName(),
-                registerRequest.getLastName(),
-                registerRequest.getEmail(),
-                registerRequest.getPassword()
-            );
-
-            String jwt = jwtUtil.generateToken(user);
-            return ResponseEntity.ok(new JwtResponse(jwt, user.getId(), user.getEmail(), 
-                                                    user.getFirstName(), user.getLastName()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        boolean verified = verificationTokenService.verifyEmail(token);
+        Map<String, String> response = new HashMap<>();
+        
+        if (verified) {
+            response.put("message", "Email verified successfully! You can now log in.");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "Invalid or expired verification token.");
+            return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerificationEmail(@RequestParam String email) {
+        Optional<User> userOpt = userService.findByEmail(email);
+            
+        if (userOpt.isEmpty()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "User not found.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        User user = userOpt.get();
+        if (user.isEmailVerified()) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Email is already verified.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        verificationTokenService.createVerificationToken(user);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Verification email sent successfully!");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // For JWT, just return OK. Client should remove token.
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Unauthorized");
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
         }
-
         User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(user);
+        // Return the user info needed by your frontend
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("firstName", user.getFirstName());
+        response.put("lastName", user.getLastName());
+        // Add any other fields you want to expose
+        return ResponseEntity.ok(response);
     }
+    
+
 }

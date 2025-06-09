@@ -1,78 +1,91 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { ChartGantt } from "lucide-react";
-import { Link } from "wouter";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [, setLocation] = useLocation();
+  const { login } = useAuthJWT();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // For now, just redirect to home - we'll implement JWT later
-    window.location.href = "/";
-  };
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      await login({ email, password });
+      setLocation("/");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "Invalid email or password. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center space-x-3 mb-8">
-          <ChartGantt className="h-10 w-10 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">DSA Visualizer</h1>
-        </div>
-
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-center mb-2">Welcome back</h2>
-          <p className="text-gray-600 text-center mb-6">
-            Enter your email and password to access your account
-          </p>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 flex flex-col items-center">
+          <div className="flex items-center space-x-2 mb-4">
+            <ChartGantt className="h-8 w-8 text-primary" />
+            <h2 className="text-2xl font-bold">DSA Visualizer</h2>
+          </div>
+          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardDescription>Enter your credentials to access your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+                placeholder="name@example.com"
                 required
-                className="w-full"
+                type="email"
+                disabled={isLoading}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name="password"
                 required
-                className="w-full"
+                type="password"
+                disabled={isLoading}
               />
             </div>
-
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button className="w-full" type="submit" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
-            <Link href="/register">
-              <a className="text-blue-600 hover:underline font-medium">
-                Sign up
-              </a>
-            </Link>
+          <div className="mt-4 text-center text-sm">
+            <span className="text-muted-foreground">Don't have an account? </span>
+            <Button
+              variant="link"
+              className="p-0 h-auto font-semibold"
+              onClick={() => setLocation("/register")}
+            >
+              Sign up
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -32,6 +32,9 @@ public class User implements UserDetails {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "email_verified")
+    private boolean emailVerified = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -58,6 +61,7 @@ public class User implements UserDetails {
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.emailVerified = false;
     }
 
     // UserDetails implementation
@@ -88,7 +92,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return emailVerified;
     }
 
     // Getters and Setters
@@ -109,6 +113,9 @@ public class User implements UserDetails {
 
     public String getProfileImageUrl() { return profileImageUrl; }
     public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+
+    public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

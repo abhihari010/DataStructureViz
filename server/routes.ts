@@ -2,14 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertUserProgressSchema, insertUserSolutionSchema } from "@shared/schema";
+import {
+  insertUserProgressSchema,
+  insertUserSolutionSchema,
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -21,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Progress tracking routes
-  app.get('/api/progress', isAuthenticated, async (req: any, res) => {
+  app.get("/api/progress", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const progress = await storage.getUserProgress(userId);
@@ -32,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/progress/:topicId', isAuthenticated, async (req: any, res) => {
+  app.get("/api/progress/:topicId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { topicId } = req.params;
@@ -44,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/progress', isAuthenticated, async (req: any, res) => {
+  app.post("/api/progress", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const progressData = insertUserProgressSchema.parse(req.body);
@@ -57,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Practice problems routes
-  app.get('/api/problems', async (req, res) => {
+  app.get("/api/problems", async (req, res) => {
     try {
       const { topicId } = req.query;
       const problems = await storage.getPracticeProblems(topicId as string);
@@ -68,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/problems/:id', async (req, res) => {
+  app.get("/api/problems/:id", async (req, res) => {
     try {
       const problemId = parseInt(req.params.id);
       const problem = await storage.getPracticeProblem(problemId);
@@ -83,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User solutions routes
-  app.get('/api/solutions', isAuthenticated, async (req: any, res) => {
+  app.get("/api/solutions", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { problemId } = req.query;
@@ -98,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/solutions', isAuthenticated, async (req: any, res) => {
+  app.post("/api/solutions", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const solutionData = insertUserSolutionSchema.parse({

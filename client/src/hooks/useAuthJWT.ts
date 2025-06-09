@@ -1,26 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  profileImageUrl?: string;
-}
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface RegisterRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-}
+import { auth, type User, type LoginRequest, type RegisterRequest } from "@/lib/api";
+import { AxiosResponse } from "axios";
+import { useLocation } from "wouter";
 
 interface AuthResponse {
   token: string;
@@ -32,50 +14,49 @@ interface AuthResponse {
 }
 
 export function useAuthJWT() {
+  const [isAuthTransitioning, setIsAuthTransitioning] = useState(false);
+  const [location, setLocation] = useLocation();
   const [token, setToken] = useState<string | null>(localStorage.getItem('jwt_token'));
   const queryClient = useQueryClient();
 
-  // Temporarily simulate authentication until Spring Boot backend is ready
   const { data: user, isLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
-    enabled: false, // Disable for now
+    queryFn: async () => {
+      const response = await auth.getCurrentUser();
+      return response.data;
+    },
+    enabled: !!token,
     retry: false,
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginRequest): Promise<AuthResponse> => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-      
-      return response.json();
+  const loginMutation = useMutation<AuthResponse, Error, LoginRequest>({
+    mutationFn: async (credentials) => {
+      const response = await auth.login(credentials);
+      return response.data;
+    },
+    onMutate: () => {
+      setIsAuthTransitioning(true);
     },
     onSuccess: (data) => {
       localStorage.setItem('jwt_token', data.token);
       setToken(data.token);
+      // Optimistically set the user in the React Query cache
+      queryClient.setQueryData(["/api/auth/user"], {
+        id: data.id,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation('/');
+      setTimeout(() => setIsAuthTransitioning(false), 600);
     },
   });
 
-  const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterRequest): Promise<AuthResponse> => {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Registration failed');
-      }
-      
-      return response.json();
+  const registerMutation = useMutation<AuthResponse, Error, RegisterRequest>({
+    mutationFn: async (userData) => {
+      const response = await auth.register(userData);
+      return response.data;
     },
     onSuccess: (data) => {
       localStorage.setItem('jwt_token', data.token);
@@ -88,49 +69,14 @@ export function useAuthJWT() {
     localStorage.removeItem('jwt_token');
     setToken(null);
     queryClient.clear();
-  };
-
-  // Add JWT token to API requests
-  useEffect(() => {
-    if (token) {
-      // Override the default query function to include JWT token
-      queryClient.setDefaultOptions({
-        queries: {
-          queryFn: async ({ queryKey }) => {
-            const response = await fetch(queryKey[0] as string, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (!response.ok) {
-              if (response.status === 401) {
-                logout();
-                throw new Error('Unauthorized');
-              }
-              throw new Error('Network response was not ok');
-            }
-            
-            return response.json();
-          },
-        },
-      });
-    }
-  }, [token, queryClient]);
-
-  // Temporarily simulate a logged-in user for testing
-  const simulatedUser: User = {
-    id: "1",
-    email: "test@example.com", 
-    firstName: "Test",
-    lastName: "User"
+    window.location.href = '/'; // Redirect to landing page after logout
   };
 
   return {
-    user: simulatedUser, // Return simulated user until backend is ready
-    isLoading: false,
-    isAuthenticated: true, // Temporarily return true
+    isAuthTransitioning,
+    user,
+    isLoading,
+    isAuthenticated: !!user,
     login: loginMutation.mutate,
     register: registerMutation.mutate,
     logout,

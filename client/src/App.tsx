@@ -1,26 +1,32 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
+import { queryClient } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Stack from "@/pages/stack";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import VerifyEmail from "@/pages/verify-email";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuthJWT();
+  const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
+
+  if (isLoading || isAuthTransitioning) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/verify-email" component={VerifyEmail} />
         </>
       ) : (
         <>
@@ -33,7 +39,7 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -43,5 +49,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;

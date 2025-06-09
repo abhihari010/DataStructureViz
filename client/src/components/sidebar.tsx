@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Link, useLocation } from "wouter";
+import { progressApi } from "@/lib/api";
 import { UserProgress } from "@shared/schema";
 import { 
   Layers, 
@@ -36,6 +37,7 @@ export default function Sidebar() {
   
   const { data: progress } = useQuery<UserProgress[]>({
     queryKey: ["/api/progress"],
+    queryFn: progressApi.getUserProgress,
   });
 
   const isTopicCompleted = (topicId: string) => {
@@ -58,27 +60,28 @@ export default function Sidebar() {
     const Icon = item.icon;
     
     return (
-      <Link href={item.path}>
-        <a className={`
+      <Link
+        href={item.path}
+        className={`
           flex items-center justify-between p-2 rounded-lg transition-colors
           ${isActive 
             ? 'bg-primary text-white' 
             : 'text-gray-700 hover:bg-gray-100'
           }
-        `}>
-          <div className="flex items-center space-x-3">
-            <Icon className="w-4 h-4" />
-            <span className="text-sm font-medium">{item.name}</span>
-          </div>
-          {isActive && (
-            <Badge variant="secondary" className="bg-white bg-opacity-20 text-white text-xs">
-              Active
-            </Badge>
-          )}
-          {isCompleted && !isActive && (
-            <Check className="w-4 h-4 text-green-600" />
-          )}
-        </a>
+        `}
+      >
+        <div className="flex items-center space-x-3">
+          <Icon className="w-4 h-4" />
+          <span className="text-sm font-medium">{item.name}</span>
+        </div>
+        {isActive && (
+          <Badge variant="secondary" className="bg-white bg-opacity-20 text-white text-xs">
+            Active
+          </Badge>
+        )}
+        {isCompleted && !isActive && (
+          <Check className="w-4 h-4 text-green-600" />
+        )}
       </Link>
     );
   };

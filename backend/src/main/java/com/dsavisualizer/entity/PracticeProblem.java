@@ -3,6 +3,8 @@ package com.dsavisualizer.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "practice_problems")
@@ -23,6 +25,7 @@ public class PracticeProblem {
     @Column(name = "topic_id", nullable = false)
     private String topicId;
 
+    @Type(JsonBinaryType.class)
     @Column(name = "test_cases", columnDefinition = "jsonb")
     private String testCases;
 
