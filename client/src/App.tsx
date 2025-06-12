@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Stack from "@/pages/stack";
+import Queue from "@/pages/queue";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import VerifyEmail from "@/pages/verify-email";
@@ -32,6 +33,16 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/stack" component={Stack} />
+          <Route path="/queue" component={Queue} />
+          {/*
+          <Route path="/linked-list" component={LinkedList} />
+          <Route path="/binary-tree" component={BinaryTree} />
+          <Route path="/graph" component={Graph} />
+          <Route path="/bubble-sort" component={BubbleSort} />
+          <Route path="/quick-sort" component={QuickSort} />
+          <Route path="/dfs-bfs" component={DFSBFS} />
+          <Route path="/dijkstra" component={Dijkstra} />
+          */}
         </>
       )}
       <Route component={NotFound} />

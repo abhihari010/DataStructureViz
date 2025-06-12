@@ -1,6 +1,6 @@
 import Navigation from "@/components/navigation";
 import Sidebar from "@/components/sidebar";
-import StackVisualization from "@/components/visualizations/stack-visualization";
+import QueueVisualization from "@/components/visualizations/queue-visualization";
 import CodePanel from "@/components/code-panel";
 import PracticeSection from "@/components/practice-section";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 
 
-export default function Stack() {
+export default function Queue() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -48,7 +48,7 @@ export default function Stack() {
               <div className="flex-1 overflow-auto p-2">
                 <div className="max-w-3xl mx-auto w-full h-full flex items-center justify-center">
                   <div className="w-full">
-                <StackVisualization />
+                <QueueVisualization />
               </div>
                 </div>
               </div>
@@ -64,7 +64,7 @@ export default function Stack() {
             {/* Bottom Panel */}
             <div className="bg-white border-t border-gray-200 p-6">
             <ErrorBoundary fallback={<div>Error rendering PracticeSection</div>}>
-              <PracticeSection topicId="stack" />
+              <PracticeSection topicId="queue" />
             </ErrorBoundary>
             </div>
           </div>
