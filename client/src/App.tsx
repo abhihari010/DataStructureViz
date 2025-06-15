@@ -12,6 +12,9 @@ import Queue from "@/pages/queue";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import VerifyEmail from "@/pages/verify-email";
+import LinkedList from "@/pages/linked-list";
+import BinaryTree from "@/pages/binary-tree";
+import Settings from "@/pages/settings";
 
 function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
@@ -34,9 +37,10 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/stack" component={Stack} />
           <Route path="/queue" component={Queue} />
-          {/*
           <Route path="/linked-list" component={LinkedList} />
           <Route path="/binary-tree" component={BinaryTree} />
+          <Route path="/settings" component={Settings} />
+          {/*
           <Route path="/graph" component={Graph} />
           <Route path="/bubble-sort" component={BubbleSort} />
           <Route path="/quick-sort" component={QuickSort} />

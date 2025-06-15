@@ -36,7 +36,7 @@ export default function Home() {
   });
 
   const completedTopics = progress?.filter((p) => p.completed).length || 0;
-  const totalTopics = 25; // This would come from a topics API
+  const totalTopics = 25; 
   const completionPercentage = (completedTopics / totalTopics) * 100;
 
   const recentTopics = [

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { problemsApi } from "@/lib/api";
-import { CheckCircle, List, Link as LinkIcon } from "lucide-react";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getTopicConfig, TopicConcept } from "@/config/topic-config";
 
 interface PracticeProblem {
   id: number;
@@ -24,28 +24,8 @@ export default function PracticeSection({ topicId }: PracticeSectionProps) {
     queryFn: () => problemsApi.getProblems(topicId),
   });
 
-  const keyConcepts = [
-    {
-      icon: CheckCircle,
-      title: "LIFO Principle",
-      description: "Last element added is first to be removed",
-    },
-    {
-      icon: CheckCircle,
-      title: "Push & Pop",
-      description: "Primary operations for adding and removing",
-    },
-    {
-      icon: CheckCircle,
-      title: "Peek Operation",
-      description: "View top element without removing",
-    },
-  ];
-
-  const nextSteps = [
-    { id: "queue", name: "Queue", icon: List, path: "/queue" },
-    { id: "linked-list", name: "Linked List", icon: LinkIcon, path: "/linked-list" },
-  ];
+  // Get topic-specific configuration
+  const { keyConcepts, nextSteps } = getTopicConfig(topicId);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -126,7 +106,7 @@ export default function PracticeSection({ topicId }: PracticeSectionProps) {
             {nextSteps.map((step) => (
               <Card key={step.id} className="transition-shadow">
                 <CardContent className="p-0">
-                  <Link href={`/topics/${step.id}`} className="flex items-center space-x-4 py-4 px-4 hover:bg-gray-50 rounded-lg transition group">
+                  <Link href={`/${step.id}`} className="flex items-center space-x-4 py-4 px-4 hover:bg-gray-50 rounded-lg transition group">
                     <step.icon className="h-6 w-6 text-primary" />
                     <div>
                       <h4 className="font-medium group-hover:underline">{step.name}</h4>

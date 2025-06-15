@@ -67,84 +67,76 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-2 hover:border-primary/20 transition-colors">
-              <CardHeader>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <ChartGantt className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle>Interactive Visualizations</CardTitle>
-                <CardDescription>
-                  Watch data structures come alive with smooth animations and
-                  step-by-step operations.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          <div className="flex flex-col items-center w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+              <Card className="border-2 hover:border-primary/20 transition-colors">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <ChartGantt className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle>Interactive Visualizations</CardTitle>
+                  <CardDescription>
+                    Watch data structures come alive with smooth animations and
+                    step-by-step operations.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-colors">
-              <CardHeader>
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
-                  <Code2 className="h-6 w-6 text-secondary" />
-                </div>
-                <CardTitle>Synchronized Code</CardTitle>
-                <CardDescription>
-                  See the actual implementation with highlighted code lines as
-                  animations progress.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+              <Card className="border-2 hover:border-primary/20 transition-colors">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+                    <Code2 className="h-6 w-6 text-secondary" />
+                  </div>
+                  <CardTitle>Code Examples</CardTitle>
+                  <CardDescription>
+                    View and experiment with code implementations in multiple
+                    programming languages.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-colors">
-              <CardHeader>
-                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
-                  <BookOpen className="h-6 w-6 text-accent" />
-                </div>
-                <CardTitle>Practice Problems</CardTitle>
-                <CardDescription>
-                  Solve real coding challenges with instant feedback and
-                  detailed explanations.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+              <Card className="border-2 hover:border-primary/20 transition-colors">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                    <BookOpen className="h-6 w-6 text-accent" />
+                  </div>
+                  <CardTitle>Practice Problems</CardTitle>
+                  <CardDescription>
+                    Solve real coding challenges with instant feedback and
+                    detailed explanations.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
 
-            <Card className="border-2 hover:border-primary/20 transition-colors">
-              <CardHeader>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <Trophy className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle>Progress Tracking</CardTitle>
-                <CardDescription>
-                  Track your learning journey with detailed progress analytics
-                  and achievements.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            {/* Centered row with two cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mt-8">
+              <Card className="border-2 hover:border-primary/20 transition-colors">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                    <Trophy className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <CardTitle>Progress Tracking</CardTitle>
+                  <CardDescription>
+                    Track your learning journey with detailed progress analytics
+                    and achievements.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
 
-            <Card className="border-2 hover:border-primary/20 transition-colors">
-              <CardHeader>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="h-6 w-6 text-orange-600" />
-                </div>
-                <CardTitle>Multiple Languages</CardTitle>
-                <CardDescription>
-                  View implementations in JavaScript, Java, Python, and more
-                  programming languages.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-2 hover:border-primary/20 transition-colors">
-              <CardHeader>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-                <CardTitle>Interview Ready</CardTitle>
-                <CardDescription>
-                  Structured learning path designed specifically for technical
-                  interview preparation.
-                </CardDescription>
-              </CardHeader>
-            </Card>
+              <Card className="border-2 hover:border-primary/20 transition-colors">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                    <Zap className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <CardTitle>Multiple Languages</CardTitle>
+                  <CardDescription>
+                    View implementations in JavaScript, Java, Python, and more
+                    programming languages.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
@@ -189,14 +181,6 @@ export default function Landing() {
                     <div className="w-2 h-2 bg-primary rounded-full"></div>
                     <span className="text-sm">Trees & Graphs</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-sm">Hash Tables</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span className="text-sm">Heaps</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -220,19 +204,11 @@ export default function Landing() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                    <span className="text-sm">Graph Traversal</span>
+                    <span className="text-sm">Breadth First Search</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                    <span className="text-sm">Dynamic Programming</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                    <span className="text-sm">Greedy Algorithms</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                    <span className="text-sm">Divide & Conquer</span>
+                    <span className="text-sm">Depth First Search</span>
                   </div>
                 </div>
               </CardContent>

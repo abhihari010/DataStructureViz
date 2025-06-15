@@ -7,11 +7,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChartGantt, Bell, Settings, LogOut } from "lucide-react";
+import { ChartGantt, Bell, Settings, LogOut, User as UserIcon } from "lucide-react";
 import { Link } from "wouter";
+import { User } from "@/lib/api";
+
+interface NavigationUser extends User {
+  profileImageUrl?: string;
+}
 
 export default function Navigation() {
   const { user, logout } = useAuthJWT();
+  const typedUser = user as NavigationUser | null;
 
   const getInitials = (firstName?: string, lastName?: string) => {
     const first = firstName?.charAt(0) || "";
@@ -59,29 +65,32 @@ export default function Navigation() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm">
-            <Bell className="h-4 w-4" />
-          </Button>
+
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={user?.profileImageUrl || ""}
-                    alt="Profile"
+                    src={typedUser?.profileImageUrl}
+                    alt={`${typedUser?.firstName} ${typedUser?.lastName}`}
                   />
                   <AvatarFallback className="bg-primary text-white text-sm font-medium">
-                    {getInitials((user as any)?.firstName, (user as any)?.lastName)}
+                    {getInitials(typedUser?.firstName, typedUser?.lastName) || (
+                      <UserIcon className="h-5 w-5" />
+                    )}
                   </AvatarFallback>
                 </Avatar>
+                <span className="sr-only">User menu</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
+              <Link href="/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem onClick={logout}>
   <LogOut className="mr-2 h-4 w-4" />
   <span>Log out</span>

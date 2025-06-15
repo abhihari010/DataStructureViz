@@ -1,113 +1,66 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronUp, Code, Maximize2, Minimize2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const codeExamples = {
-  javascript: `class Stack {
-  constructor() {
-    this.items = [];
-  }
-
-  // Add element to top of stack
-  push(element) {
-    this.items.push(element);
-    return this.items.length;
-  }
-
-  // Remove and return top element
-  pop() {
-    if (this.isEmpty()) {
-      return null;
-    }
-    return this.items.pop();
-  }
-
-  // Peek at top element
-  peek() {
-    return this.items[this.items.length - 1];
-  }
-
-  // Check if stack is empty
-  isEmpty() {
-    return this.items.length === 0;
-  }
-
-  // Get stack size
-  size() {
-    return this.items.length;
-  }
-}`,
-  java: `public class Stack<T> {
-    private List<T> items;
-    
-    public Stack() {
-        this.items = new ArrayList<>();
-    }
-    
-    // Add element to top of stack
-    public void push(T element) {
-        items.add(element);
-    }
-    
-    // Remove and return top element
-    public T pop() {
-        if (isEmpty()) {
-            return null;
-        }
-        return items.remove(items.size() - 1);
-    }
-    
-    // Peek at top element
-    public T peek() {
-        if (isEmpty()) {
-            return null;
-        }
-        return items.get(items.size() - 1);
-    }
-    
-    // Check if stack is empty
-    public boolean isEmpty() {
-        return items.isEmpty();
-    }
-    
-    // Get stack size
-    public int size() {
-        return items.size();
-    }
-}`,
-  python: `class Stack:
-    def __init__(self):
-        self.items = []
-    
-    # Add element to top of stack
-    def push(self, element):
-        self.items.append(element)
-        return len(self.items)
-    
-    # Remove and return top element
-    def pop(self):
-        if self.is_empty():
-            return None
-        return self.items.pop()
-    
-    # Peek at top element
-    def peek(self):
-        if self.is_empty():
-            return None
-        return self.items[-1]
-    
-    # Check if stack is empty
-    def is_empty(self):
-        return len(self.items) == 0
-    
-    # Get stack size
-    def size(self):
-        return len(self.items)`
+// Default code examples if none provided
+const defaultCodeExamples = {
+  javascript: `// No code example available
+// Please provide code examples as a prop`,
+  python: `# No code example available
+# Please provide code examples as a prop`
 };
 
-export default function CodePanel() {
-  const [selectedLanguage, setSelectedLanguage] = useState<keyof typeof codeExamples>('javascript');
+interface CodePanelProps {
+  codeExamples?: {
+    [key: string]: string;
+  };
+}
+
+// Show more lines by default before showing the expand button
+const MAX_VISIBLE_LINES = 18;
+
+export default function CodePanel({ 
+  codeExamples = defaultCodeExamples
+}: CodePanelProps) {
+  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showExpandButton, setShowExpandButton] = useState(false);
+  const codeContentRef = useRef<HTMLDivElement>(null);
+
+  // Get available languages from the provided examples
+  const availableLanguages = Object.keys(codeExamples);
+  
+  // Ensure selectedLanguage exists in available languages, otherwise use the first one
+  const safeSelectedLanguage = availableLanguages.includes(selectedLanguage) 
+    ? selectedLanguage 
+    : availableLanguages[0] || 'javascript';
+  
+  // Update selected language if it's not valid
+  useEffect(() => {
+    if (selectedLanguage !== safeSelectedLanguage) {
+      setSelectedLanguage(safeSelectedLanguage);
+    }
+  }, [selectedLanguage, safeSelectedLanguage]);
+  
+  // Check if code exceeds max visible lines
+  useEffect(() => {
+    if (codeContentRef.current && codeExamples[safeSelectedLanguage]) {
+      const lineCount = codeExamples[safeSelectedLanguage].split('\n').length;
+      setShowExpandButton(lineCount > MAX_VISIBLE_LINES);
+    }
+  }, [safeSelectedLanguage, codeExamples]);
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   const formatCode = (code: string) => {
     return code.split('\n').map((line, index) => (
@@ -122,63 +75,97 @@ export default function CodePanel() {
     ));
   };
 
+  const codeLines = (codeExamples[safeSelectedLanguage] || '').split('\n');
+  const visibleCode = isExpanded 
+    ? codeLines 
+    : codeLines.slice(0, MAX_VISIBLE_LINES);
+
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col w-full flex-shrink-0 code-panel">
       {/* Code Header */}
-      <CardHeader className="border-b border-gray-200">
+      <CardHeader className="border-b border-gray-200 p-3">
         <div className="flex items-center justify-between">
-          <CardTitle>Implementation</CardTitle>
           <div className="flex items-center space-x-2">
-            <Button
-              variant={selectedLanguage === 'javascript' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedLanguage('javascript')}
+            <Code className="h-4 w-4 text-gray-500" />
+            <CardTitle className="text-sm font-medium">Implementation</CardTitle>
+          </div>
+          
+          <div className="flex items-center space-x-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                  {safeSelectedLanguage.toUpperCase()}
+                  <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                {availableLanguages.map((lang) => (
+                  <DropdownMenuItem 
+                    key={lang}
+                    onClick={() => setSelectedLanguage(lang)}
+                    className={lang === safeSelectedLanguage ? 'bg-gray-100' : ''}
+                  >
+                    {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={toggleExpand}
+              disabled={!showExpandButton}
             >
-              JavaScript
-            </Button>
-            <Button
-              variant={selectedLanguage === 'java' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedLanguage('java')}
-            >
-              Java
-            </Button>
-            <Button
-              variant={selectedLanguage === 'python' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedLanguage('python')}
-            >
-              Python
+              {isExpanded ? (
+                <Minimize2 className="h-3.5 w-3.5" />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" />
+              )}
+              <span className="sr-only">{isExpanded ? 'Collapse' : 'Expand'}</span>
             </Button>
           </div>
         </div>
       </CardHeader>
 
       {/* Code Content */}
-      <CardContent className="flex-1 p-0 overflow-auto">
-        <div className="p-4 bg-slate-900 text-gray-100 h-full font-code text-sm leading-relaxed">
-          <div className="space-y-1">
-            {formatCode(codeExamples[selectedLanguage])}
+      <CardContent className="flex-1 p-0 overflow-hidden">
+        <div 
+          ref={codeContentRef}
+          className={`p-4 bg-slate-900 text-gray-100 font-mono text-sm leading-relaxed overflow-auto h-full transition-all duration-300 ${
+            !isExpanded && showExpandButton ? 'max-h-[500px]' : 'h-full'
+          }`}
+        >
+          <div className="space-y-0.5">
+            {formatCode(visibleCode.join('\n'))}
+            {showExpandButton && (
+              <div 
+                className={`text-center py-2 px-4 text-xs ${
+                  isExpanded 
+                    ? 'text-blue-400 hover:text-blue-500' 
+                    : 'text-blue-400'
+                } bg-blue-50 dark:bg-blue-900/30 rounded-md mx-2 mb-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center justify-center space-x-1`}
+                onClick={toggleExpand}
+              >
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="h-3.5 w-3.5" />
+                    <span>Show less</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                    <span>Show {codeLines.length - MAX_VISIBLE_LINES} more lines</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
 
-      {/* Operation Info */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Time Complexity:</span>
-            <Badge variant="outline" className="font-code">O(1)</Badge>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Space Complexity:</span>
-            <Badge variant="outline" className="font-code">O(n)</Badge>
-          </div>
-          <div className="text-sm text-gray-600">
-            <strong>Use Cases:</strong> Function calls, undo operations, expression evaluation, backtracking algorithms
-          </div>
-        </div>
-      </div>
+
     </Card>
   );
 }
