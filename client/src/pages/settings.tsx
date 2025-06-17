@@ -9,12 +9,16 @@ import { useForm } from "react-hook-form";
 import { User, auth } from "@/lib/api";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Pencil, Save, User as UserIcon, Mail } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Save, User as UserIcon, Mail, Lock, Check } from "lucide-react";
+import { Link } from "wouter";
 
 type ProfileFormData = {
   firstName: string;
   lastName: string;
   email: string;
+};
+
+type PasswordFormData = {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -26,24 +30,50 @@ export default function SettingsPage() {
   const [isPasswordEditing, setIsPasswordEditing] = useState(false);
   const queryClient = useQueryClient();
   
-  const { register, handleSubmit, reset, formState: { errors }, watch } = useForm<ProfileFormData>({
-    defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
-    },
-  });
+  // Profile form
+  const { 
+    register: registerProfile, 
+    handleSubmit: handleProfileSubmit, 
+    reset: resetProfile, 
+    formState: { errors: profileErrors } 
+  } = useForm<ProfileFormData>();
 
-  // Initialize form with user data when user is loaded
+  // Password form
+  const { 
+    register: registerPassword, 
+    handleSubmit: handlePasswordSubmit, 
+    reset: resetPassword, 
+    formState: { errors: passwordErrors },
+    watch,
+    setValue,
+    trigger,
+    getValues
+  } = useForm<PasswordFormData>({
+    mode: 'onChange',
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+  });
+  
+  const newPassword = watch('newPassword');
+
+  // Set initial form values when user data is available
   useEffect(() => {
     if (user) {
-      reset({
+      resetProfile({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        email: user.email || '',
+        email: user.email || ''
       });
+      
+      // Reset password form
+      setValue('currentPassword', '');
+      setValue('newPassword', '');
+      setValue('confirmPassword', '');
     }
-  }, [user, reset]);
+  }, [user, resetProfile, setValue]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { firstName: string; lastName: string; email: string }) => {
@@ -64,17 +94,31 @@ export default function SettingsPage() {
 
   const updatePasswordMutation = useMutation({
     mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
-      // In a real app, you would call an API endpoint to update the password
-      // For now, we'll just simulate a successful response
-      return { success: true };
+      if (!data.currentPassword || !data.newPassword) {
+        throw new Error('Both current and new password are required');
+      }
+      
+      const payload = {
+        currentPassword: data.currentPassword.trim(),
+        newPassword: data.newPassword.trim()
+      };
+      
+      const response = await auth.changePassword(payload);
+      return response.data;
     },
     onSuccess: () => {
       toast.success('Password updated successfully');
       setIsPasswordEditing(false);
-      reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      resetPassword();
+      // Log out user after password change for security
+      setTimeout(() => {
+        logout();
+      }, 1000);
     },
-    onError: () => {
-      toast.error('Failed to update password');
+    onError: (error: any) => {
+      const errorMessage = error.message || 'Failed to update password. Please try again.';
+      toast.error(errorMessage);
+      console.error('Password update error:', error);
     },
   });
 
@@ -82,23 +126,83 @@ export default function SettingsPage() {
     updateProfileMutation.mutate({
       firstName: data.firstName,
       lastName: data.lastName,
-      email: data.email,
+      email: data.email
     });
   };
 
-  const onSubmitPassword = (data: ProfileFormData) => {
-    if (data.newPassword !== data.confirmPassword) {
-      toast.error('New passwords do not match');
-      return;
+  const onSubmitPassword = async (data: PasswordFormData) => {
+    // Client-side validation
+    if (!data.currentPassword || !data.newPassword || !data.confirmPassword) {
+      toast.error('All fields are required');
+      throw new Error('All fields are required');
     }
-    updatePasswordMutation.mutate({
-      currentPassword: data.currentPassword,
-      newPassword: data.newPassword,
-    });
+    
+    if (data.newPassword !== data.confirmPassword) {
+      toast.error('New password and confirmation do not match');
+      throw new Error('Passwords do not match');
+    }
+    
+    // Additional password strength validation
+    if (data.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      throw new Error('Password is too short');
+    }
+    
+    if (!/[A-Z]/.test(data.newPassword)) {
+      toast.error('Password must contain at least one uppercase letter');
+      throw new Error('Password must contain an uppercase letter');
+    }
+    
+    const payload = {
+      currentPassword: data.currentPassword.trim(),
+      newPassword: data.newPassword.trim()
+    };
+    
+    await updatePasswordMutation.mutateAsync(payload);
+    return true;
+  };
+  
+  const handleProfileSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    handleProfileSubmit(onSubmitProfile)();
+  };
+  
+  const handlePasswordSubmitClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Password form submit clicked');
+    
+    // Trigger validation for all fields
+    const isFormValid = await trigger();
+    if (!isFormValid) {
+      console.log('Form validation failed');
+      return false;
+    }
+    
+    // Get the form values directly from react-hook-form
+    const formValues = getValues();
+    console.log('Submitting form with values:', formValues);
+    
+    try {
+      await onSubmitPassword({
+        currentPassword: formValues.currentPassword,
+        newPassword: formValues.newPassword,
+        confirmPassword: formValues.confirmPassword
+      });
+      return true;
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      return false;
+    }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await auth.logout();
+    } finally {
+      // Always call logout to ensure the user is logged out client-side
+      logout();
+    }
   };
 
   const getInitials = (name: string) => {
@@ -108,10 +212,35 @@ export default function SettingsPage() {
       .join('')
       .toUpperCase();
   };
+  
+  const handleCancelEdit = () => {
+    resetProfile({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || ''
+    });
+    setIsEditing(false);
+  };
+  
+  const handleCancelPasswordEdit = () => {
+    resetPassword({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setIsPasswordEditing(false);
+  };
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Settings</h1>
+      <div className="flex items-center mb-8">
+        <Link href="/" className="mr-4">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <h1 className="text-3xl font-bold">Account Settings</h1>
+      </div>
       
       {/* Profile Section */}
       <Card className="mb-8">
@@ -129,15 +258,12 @@ export default function SettingsPage() {
               <div className="space-x-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => {
-                    reset();
-                    setIsEditing(false);
-                  }}
+                  onClick={handleCancelEdit}
                 >
                   Cancel
                 </Button>
                 <Button 
-                  onClick={handleSubmit(onSubmitProfile)}
+                  onClick={handleProfileSubmitClick}
                   disabled={updateProfileMutation.isPending}
                 >
                   {updateProfileMutation.isPending ? (
@@ -163,7 +289,7 @@ export default function SettingsPage() {
                   </AvatarFallback>
                 )}
               </Avatar>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled={!isEditing}>
                 Change Photo
               </Button>
             </div>
@@ -174,11 +300,14 @@ export default function SettingsPage() {
                 {isEditing ? (
                   <Input
                     id="firstName"
-                    {...register('firstName', { required: 'First name is required' })}
+                    {...registerProfile('firstName', { required: 'First name is required' })}
                     disabled={updateProfileMutation.isPending}
                   />
                 ) : (
                   <div className="px-3 py-2 text-sm">{user?.firstName}</div>
+                )}
+                {profileErrors.firstName && (
+                  <p className="text-sm text-red-500">{profileErrors.firstName.message}</p>
                 )}
               </div>
               
@@ -187,11 +316,14 @@ export default function SettingsPage() {
                 {isEditing ? (
                   <Input
                     id="lastName"
-                    {...register('lastName', { required: 'Last name is required' })}
+                    {...registerProfile('lastName', { required: 'Last name is required' })}
                     disabled={updateProfileMutation.isPending}
                   />
                 ) : (
                   <div className="px-3 py-2 text-sm">{user?.lastName}</div>
+                )}
+                {profileErrors.lastName && (
+                  <p className="text-sm text-red-500">{profileErrors.lastName.message}</p>
                 )}
               </div>
               
@@ -205,7 +337,7 @@ export default function SettingsPage() {
                         id="email"
                         type="email"
                         className="pl-10"
-                        {...register('email', { 
+                        {...registerProfile('email', { 
                           required: 'Email is required',
                           pattern: {
                             value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -222,7 +354,9 @@ export default function SettingsPage() {
                     {user?.email}
                   </div>
                 )}
-                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+                {profileErrors.email && (
+                  <p className="text-sm text-red-500">{profileErrors.email.message}</p>
+                )}
               </div>
             </div>
           </div>
@@ -238,23 +372,29 @@ export default function SettingsPage() {
               <CardDescription>Update your password</CardDescription>
             </div>
             {!isPasswordEditing ? (
-              <Button variant="outline" onClick={() => setIsPasswordEditing(true)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsPasswordEditing(true)}
+                data-testid="change-password-button"
+                type="button"
+              >
                 <Pencil className="mr-2 h-4 w-4" /> Change Password
               </Button>
             ) : (
               <div className="space-x-2">
                 <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                    setIsPasswordEditing(false);
-                  }}
+                  variant="outline"
+                  onClick={handleCancelPasswordEdit}
+                  disabled={updatePasswordMutation.isPending}
+                  type="button"
                 >
                   Cancel
                 </Button>
                 <Button 
-                  onClick={handleSubmit(onSubmitPassword)}
+                  type="submit"
+                  form="password-form"
                   disabled={updatePasswordMutation.isPending}
+                  data-testid="save-password-button"
                 >
                   {updatePasswordMutation.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -268,58 +408,94 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
         {isPasswordEditing && (
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-2xl">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  {...register('currentPassword', { required: 'Current password is required' })}
-                  disabled={updatePasswordMutation.isPending}
-                />
-                {errors.currentPassword && (
-                  <p className="text-sm text-red-500">{errors.currentPassword.message}</p>
-                )}
+          <form id="password-form" onSubmit={handlePasswordSubmitClick} className="space-y-4">
+            <CardContent>
+              <div className="grid grid-cols-1 gap-6 max-w-2xl">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword" className="flex items-center">
+                    <Lock className="h-4 w-4 mr-2" />
+                    Current Password
+                  </Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    placeholder="Enter your current password"
+                    {...registerPassword('currentPassword', { 
+                      required: 'Current password is required',
+                      minLength: { value: 1, message: 'Current password is required' }
+                    })}
+                    disabled={updatePasswordMutation.isPending}
+                    data-testid="current-password-input"
+                  />
+                  {passwordErrors.currentPassword && (
+                    <p className="text-sm text-red-500">{passwordErrors.currentPassword.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="flex items-center">
+                    <Lock className="h-4 w-4 mr-2" />
+                    New Password
+                  </Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Enter a new password"
+                    {...registerPassword('newPassword', { 
+                      required: 'New password is required',
+                      minLength: { 
+                        value: 8, 
+                        message: 'Password must be at least 8 characters long' 
+                      },
+                      validate: (value) => 
+                        /[A-Z]/.test(value) || 'Must contain at least one uppercase letter'
+                    })}
+                    disabled={updatePasswordMutation.isPending}
+                    data-testid="new-password-input"
+                    autoComplete="new-password"
+                  />
+                  {passwordErrors.newPassword && (
+                    <p className="text-sm text-red-500">{passwordErrors.newPassword.message}</p>
+                  )}
+                  {newPassword && !passwordErrors.newPassword && (
+                    <p className="text-xs text-green-600 flex items-center">
+                      <Check className="h-3 w-3 mr-1" /> Password strength: Good
+                    </p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="flex items-center">
+                    <Lock className="h-4 w-4 mr-2" />
+                    Confirm New Password
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm your new password"
+                    {...registerPassword('confirmPassword', {
+                      required: 'Please confirm your new password',
+                      validate: (value) =>
+                        value === newPassword || 'Passwords do not match',
+                    })}
+                    disabled={updatePasswordMutation.isPending}
+                    data-testid="confirm-password-input"
+                    autoComplete="new-password"
+                  />
+                  {passwordErrors.confirmPassword && (
+                    <p className="text-sm text-red-500">
+                      {passwordErrors.confirmPassword.message}
+                    </p>
+                  )}
+                  {newPassword && watch('confirmPassword') && !passwordErrors.confirmPassword ? (
+                    <p className="text-xs text-green-600 flex items-center">
+                      <Check className="h-3 w-3 mr-1" /> Passwords match
+                    </p>
+                  ) : null}
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  {...register('newPassword', { 
-                    required: 'New password is required',
-                    minLength: {
-                      value: 8,
-                      message: 'Password must be at least 8 characters',
-                    },
-                  })}
-                  disabled={updatePasswordMutation.isPending}
-                />
-                {errors.newPassword && (
-                  <p className="text-sm text-red-500">{errors.newPassword.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  {...register('confirmPassword', { 
-                    required: 'Please confirm your new password',
-                    validate: (value) => 
-                      value === watch('newPassword') || 'Passwords do not match',
-                  })}
-                  disabled={updatePasswordMutation.isPending}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          </form>
         )}
       </Card>
       
@@ -330,26 +506,26 @@ export default function SettingsPage() {
           <CardDescription>Irreversible and destructive actions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h4 className="font-medium">Sign out of all devices</h4>
-              <p className="text-sm text-muted-foreground">
-                This will log you out of all devices where you're currently signed in.
-              </p>
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-red-800">Logout</h4>
+                <p className="text-sm text-red-600">Sign out of your account</p>
+              </div>
+              <Button variant="destructive" onClick={handleLogout}>
+                Logout
+              </Button>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
-              Sign Out Everywhere
-            </Button>
-          </div>
-          
-          <div className="mt-6 pt-6 border-t border-red-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h4 className="font-medium text-red-600">Delete Account</h4>
-              <p className="text-sm text-muted-foreground">
-                Permanently delete your account and all associated data.
-              </p>
+            
+            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-red-800">Delete Account</h4>
+                <p className="text-sm text-red-600">Permanently delete your account and all data</p>
+              </div>
+              <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                Delete Account
+              </Button>
             </div>
-            <Button variant="destructive">Delete Account</Button>
           </div>
         </CardContent>
       </Card>

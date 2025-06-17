@@ -54,6 +54,23 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(email);
     }
 
+    @Transactional
+    public void changePassword(User user, String currentPassword, String newPassword) {
+        
+        // Verify current password
+        boolean passwordMatches = passwordEncoder.matches(currentPassword, user.getPassword());
+
+        if (!passwordMatches) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        // Update to new password
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+
+        user.setPassword(encodedNewPassword);
+        User savedUser = userRepository.saveAndFlush(user);
+    }
+
     public User findById(String id) {
         return userRepository.findById(id).orElse(null);
     }

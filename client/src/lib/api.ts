@@ -6,6 +6,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true // Important for sending cookies with CORS
 });
 
 // Request interceptor to add auth token
@@ -17,9 +18,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor to handle common errors
@@ -27,20 +26,30 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
+      // Skip handling for login and change-password endpoints to allow error display
+      const isAuthEndpoint = error.config.url.includes('/auth/');
+      
+      if (isAuthEndpoint && error.config.url.includes('/auth/change-password')) {
+        return Promise.reject(error);
+      }
+
       // Handle specific error cases
       switch (error.response.status) {
+        case 400:
+          return Promise.reject(error);
+          
         case 401:
         case 403:
-          // Clear token and redirect to login
-          localStorage.removeItem("jwt_token");
-          window.location.href = "/login";
+          if (!isAuthEndpoint) {
+            localStorage.removeItem("jwt_token");
+            window.location.href = "/login";
+          } else {
+            return Promise.reject(error);
+          }
           break;
-
-        case 422:
-          console.error("Validation error:", error.response.data);
-          break;
+          
         default:
-          console.error("API error:", error.response.data);
+          return Promise.reject(error);
       }
     }
     return Promise.reject(error);
@@ -53,6 +62,8 @@ export const auth = {
   login: (data: LoginRequest) => api.post("/auth/login", data),
   logout: () => api.post("/auth/logout"),
   getCurrentUser: () => api.get("/auth/user"),
+  changePassword: (data: ChangePasswordRequest) =>
+    api.post("/auth/change-password", data),
 };
 
 // Types
@@ -66,6 +77,11 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface User {

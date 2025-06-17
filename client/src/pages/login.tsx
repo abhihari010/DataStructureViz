@@ -1,38 +1,69 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { ChartGantt } from "lucide-react";
+
+type LoginFormData = {
+  email: string;
+  password: string;
+};
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { login } = useAuthJWT();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  
+  const {
+    register,
+    handleSubmit,
+    setError: setFormError,
+    formState: { errors, isSubmitting },
+    resetField,
+    setValue
+  } = useForm<LoginFormData>();
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsLoading(true);
-
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
+  const onSubmit = async (data: LoginFormData) => {
+    setServerError(null);
+    
     try {
-      await login({ email, password });
-      setLocation("/");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: "Invalid email or password. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      await login(data);
+      // The onSuccess in useAuthJWT will handle the redirect
+    } catch (error: any) {
+      // Clear the password field on error
+      resetField('password');
+      
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.status === 401) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      }
+      
+      setServerError(errorMessage);
+      
+      // Scroll to top to show the error
+      window.scrollTo(0, 0);
+      
+      // Show toast for non-401 errors
+      if (error?.response?.status !== 401) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: errorMessage,
+        });
+      }
     }
   }
 
@@ -48,30 +79,76 @@ export default function Login() {
           <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {serverError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {serverError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                name="email"
                 placeholder="name@example.com"
-                required
                 type="email"
-                disabled={isLoading}
+                disabled={isSubmitting}
+                autoComplete="email"
+                {...register('email', {
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address',
+                  },
+                })}
+                aria-invalid={errors.email ? 'true' : 'false'}
+                className={errors.email ? 'border-red-500' : ''}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+              )}
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  className="text-sm font-medium text-primary hover:underline"
+                  onClick={() => setLocation('/forgot-password')}
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 id="password"
-                name="password"
-                required
                 type="password"
-                disabled={isLoading}
+                disabled={isSubmitting}
+                autoComplete="current-password"
+                {...register('password', {
+                  required: 'Password is required',
+                  minLength: {
+                    value: 6,
+                    message: 'Password must be at least 6 characters',
+                  },
+                })}
+                aria-invalid={errors.password ? 'true' : 'false'}
+                className={errors.password ? 'border-red-500' : ''}
               />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+              )}
             </div>
-            <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
+            
+            <Button 
+              className="w-full" 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

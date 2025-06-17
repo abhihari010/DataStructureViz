@@ -31,8 +31,16 @@ export function useAuthJWT() {
 
   const loginMutation = useMutation<AuthResponse, Error, LoginRequest>({
     mutationFn: async (credentials) => {
-      const response = await auth.login(credentials);
-      return response.data;
+      try {
+        const response = await auth.login(credentials);
+        return response.data;
+      } catch (error: any) {
+        // Re-throw the error with the response data
+        const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+        const errorWithResponse = new Error(errorMessage);
+        (errorWithResponse as any).response = error.response;
+        throw errorWithResponse;
+      }
     },
     onMutate: () => {
       setIsAuthTransitioning(true);
@@ -51,7 +59,22 @@ export function useAuthJWT() {
       setLocation('/');
       setTimeout(() => setIsAuthTransitioning(false), 600);
     },
+    onError: (error) => {
+      setIsAuthTransitioning(false);
+      // Don't throw here, let the component handle the error
+    },
   });
+
+  // Create a wrapper function that returns a promise
+  const login = async (credentials: LoginRequest) => {
+    try {
+      const result = await loginMutation.mutateAsync(credentials);
+      return result;
+    } catch (error) {
+      // Re-throw the error to be caught by the component
+      throw error;
+    }
+  };
 
   const registerMutation = useMutation<AuthResponse, Error, RegisterRequest>({
     mutationFn: async (userData) => {
@@ -77,7 +100,7 @@ export function useAuthJWT() {
     user,
     isLoading,
     isAuthenticated: !!user,
-    login: loginMutation.mutate,
+    login,
     register: registerMutation.mutate,
     logout,
     loginError: loginMutation.error,

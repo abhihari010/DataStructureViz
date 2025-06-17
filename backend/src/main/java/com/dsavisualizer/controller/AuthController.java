@@ -1,5 +1,6 @@
 package com.dsavisualizer.controller;
 
+import com.dsavisualizer.dto.ChangePasswordRequest;
 import com.dsavisualizer.dto.LoginRequest;
 import com.dsavisualizer.dto.RegisterRequest;
 import com.dsavisualizer.entity.User;
@@ -117,7 +118,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        // For JWT, just return OK. Client should remove token.
         return ResponseEntity.ok().build();
     }
 
@@ -136,6 +136,34 @@ public class AuthController {
         // Add any other fields you want to expose
         return ResponseEntity.ok(response);
     }
-    
 
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @Valid @RequestBody ChangePasswordRequest changePasswordRequest,
+            Authentication authentication) {
+        
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        }
+
+        User user = (User) authentication.getPrincipal();
+        Map<String, String> response = new HashMap<>();
+        try {
+            userService.changePassword(
+                user,
+                changePasswordRequest.getCurrentPassword(),
+                changePasswordRequest.getNewPassword()
+            );
+            
+            response.put("message", "Password updated successfully");
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("message", "Failed to update password");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

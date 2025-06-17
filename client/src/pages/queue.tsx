@@ -173,22 +173,6 @@ export default function Queue() {
                   </div>
                 </div>
               </div>
-              
-              {/* Toggle Code Panel Button */}
-              <button 
-                onClick={() => {
-                  const codePanel = document.querySelector('.code-panel');
-                  codePanel?.classList.toggle('hidden');
-                  const toggleBtn = document.querySelector('.toggle-code-btn');
-                  toggleBtn?.classList.toggle('left-0');
-                }}
-                className="toggle-code-btn fixed right-0 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-l-md shadow-md transition-all duration-300 z-10"
-                aria-label="Toggle code panel"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
             </div>
 
             {/* Bottom Panel */}
