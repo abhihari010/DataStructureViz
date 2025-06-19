@@ -41,6 +41,9 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToOne(mappedBy = "user")
+    private ForgotPassword forgotPassword;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

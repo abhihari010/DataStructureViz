@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/auth/verify").permitAll()
                 .requestMatchers("/auth/resend-verification").permitAll()
+                    .requestMatchers("/forgot-password/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

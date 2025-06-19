@@ -1,4 +1,8 @@
 package com.dsavisualizer.dto;
 
-public record ChangePassword() {
-}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record ChangePassword(
+    @JsonProperty("password") String password, 
+    @JsonProperty("repeatPassword") String repeatPassword
+) {}

@@ -1,4 +1,8 @@
 package com.dsavisualizer.dto;
 
-public record MailBody() {
+import lombok.Builder;
+
+@Builder
+public record MailBody(String to, String subject, String text) {
+
 }

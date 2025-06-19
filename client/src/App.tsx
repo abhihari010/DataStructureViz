@@ -15,6 +15,9 @@ import VerifyEmail from "@/pages/verify-email";
 import LinkedList from "@/pages/linked-list";
 import BinaryTree from "@/pages/binary-tree";
 import Settings from "@/pages/settings";
+import ResetPassword from "@/pages/reset-password";
+import VerifyOtp from "@/pages/verify-otp";
+import ForgotPassword from "@/pages/forgot-password";
 
 function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
@@ -31,6 +34,9 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/verify-email" component={VerifyEmail} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/verify-otp" component={VerifyOtp} />
         </>
       ) : (
         <>
@@ -40,6 +46,7 @@ function Router() {
           <Route path="/linked-list" component={LinkedList} />
           <Route path="/binary-tree" component={BinaryTree} />
           <Route path="/settings" component={Settings} />
+
           {/*
           <Route path="/graph" component={Graph} />
           <Route path="/bubble-sort" component={BubbleSort} />
