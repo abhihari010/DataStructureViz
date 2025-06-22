@@ -415,7 +415,7 @@ export default function BinaryTreePage() {
                 <div className="flex items-center space-x-3">
                   <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                     <Star className="w-3 h-3 mr-1" />
-                      Hard
+                      Intermediate
                   </Badge>
                 </div>
               </div>

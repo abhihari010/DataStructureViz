@@ -1,0 +1,89 @@
+.split {
+  --gutter-size: 10px;
+  --gutter-color: #3a3a3a;
+  --gutter-hover-color: #4a4a4a;
+  --gutter-active-color: #5a5a5a;
+  --gutter-pattern: #555;
+  --gutter-hover-pattern: #666;
+  --gutter-active-pattern: #777;
+}
+
+/* Horizontal gutter (for vertical split) */
+.horizontal-gutter {
+  height: var(--gutter-size);
+  background-color: var(--gutter-color);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--gutter-pattern),
+    var(--gutter-pattern) 1px,
+    var(--gutter-color) 1px,
+    var(--gutter-color) 6px
+  );
+  background-size: 6px 1px;
+  cursor: row-resize;
+  margin: -2px 0;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.horizontal-gutter:hover {
+  background-color: var(--gutter-hover-color);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--gutter-hover-pattern),
+    var(--gutter-hover-pattern) 1px,
+    var(--gutter-hover-color) 1px,
+    var(--gutter-hover-color) 6px
+  );
+}
+
+.horizontal-gutter:active {
+  background-color: var(--gutter-active-color);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--gutter-active-pattern),
+    var(--gutter-active-pattern) 1px,
+    var(--gutter-active-color) 1px,
+    var(--gutter-active-color) 6px
+  );
+}
+
+/* Vertical gutter (for horizontal split) */
+.vertical-gutter {
+  width: var(--gutter-size);
+  background-color: var(--gutter-color);
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--gutter-pattern),
+    var(--gutter-pattern) 1px,
+    var(--gutter-color) 1px,
+    var(--gutter-color) 6px
+  );
+  background-size: 1px 6px;
+  cursor: col-resize;
+  margin: 0 -2px;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.vertical-gutter:hover {
+  background-color: var(--gutter-hover-color);
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--gutter-hover-pattern),
+    var(--gutter-hover-pattern) 1px,
+    var(--gutter-hover-color) 1px,
+    var(--gutter-hover-color) 6px
+  );
+}
+
+.vertical-gutter:active {
+  background-color: var(--gutter-active-color);
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--gutter-active-pattern),
+    var(--gutter-active-pattern) 1px,
+    var(--gutter-active-color) 1px,
+    var(--gutter-active-color) 6px
+  );
+}

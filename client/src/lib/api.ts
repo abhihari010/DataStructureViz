@@ -25,33 +25,34 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      // Skip handling for login and change-password endpoints to allow error display
-      const isAuthEndpoint = error.config.url.includes('/auth/');
-      
-      if (isAuthEndpoint && error.config.url.includes('/auth/change-password')) {
-        return Promise.reject(error);
-      }
+    if (!error.response || !error.config) {
+      return Promise.reject(error);
+    }
 
-      // Handle specific error cases
-      switch (error.response.status) {
-        case 400:
-          return Promise.reject(error);
-          
-        case 401:
-        case 403:
-          if (!isAuthEndpoint) {
-            localStorage.removeItem("jwt_token");
-            window.location.href = "/login";
-          } else {
-            return Promise.reject(error);
-          }
-          break;
-          
-        default:
-          return Promise.reject(error);
+    const { status } = error.response;
+    const url = error.config.url || '';
+
+    if (status === 401 || status === 403) {
+      // These are endpoints where a 401/403 is an expected failure message for a form,
+      // not an indicator of an invalid session.
+      const isFormSubmissionEndpoint = 
+        url.includes('/auth/login') || 
+        url.includes('/auth/register') || 
+        url.includes('/auth/change-password');
+
+      if (!isFormSubmissionEndpoint) {
+        // For all other 401/403 errors (including on /auth/user), the token is invalid/expired.
+        localStorage.removeItem("jwt_token");
+        const returnUrl = window.location.pathname + window.location.search;
+        if (returnUrl !== '/login') {
+          sessionStorage.setItem('returnUrl', returnUrl);
+        }
+        window.location.href = "/login";
+        return Promise.reject({ ...error, isAuthError: true });
       }
     }
+
+    // For all other errors, or for 401s on form submissions, just reject so the UI can handle it.
     return Promise.reject(error);
   }
 );

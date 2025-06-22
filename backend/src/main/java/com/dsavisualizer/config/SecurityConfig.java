@@ -56,11 +56,13 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/register").permitAll()
-                .requestMatchers("/auth/login").permitAll()
-                .requestMatchers("/auth/verify").permitAll()
-                .requestMatchers("/auth/resend-verification").permitAll()
+                    .requestMatchers("/auth/register").permitAll()
+                    .requestMatchers("/auth/login").permitAll()
+                    .requestMatchers("/auth/verify").permitAll()
+                    .requestMatchers("/auth/resend-verification").permitAll()
                     .requestMatchers("/forgot-password/**").permitAll()
+                .requestMatchers("/problems/**").permitAll() // Allow public access to problems
+                .requestMatchers("/execute").permitAll()     // Allow public access to code execution
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

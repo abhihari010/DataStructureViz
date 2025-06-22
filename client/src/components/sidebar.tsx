@@ -18,11 +18,11 @@ import {
 } from "lucide-react";
 
 const dataStructures = [
-  { id: "stack", name: "Stack", icon: Layers, path: "/stack" },
-  { id: "queue", name: "Queue", icon: List, path: "/queue" },
-  { id: "linked-list", name: "Linked List", icon: LinkIcon, path: "/linked-list" },
-  { id: "binary-tree", name: "Binary Tree", icon: TreePine, path: "/binary-tree" },
-  { id: "graph", name: "Graph", icon: Network, path: "/graph" },
+  { id: "stack", name: "Stack", icon: Layers, path: "/topics/stack" },
+  { id: "queue", name: "Queue", icon: List, path: "/topics/queue" },
+  { id: "linked-list", name: "Linked List", icon: LinkIcon, path: "/topics/linked-list" },
+  { id: "binary-tree", name: "Binary Tree", icon: TreePine, path: "/topics/binary-tree" },
+  { id: "graph", name: "Graph", icon: Network, path: "/topics/graph" },
 ];
 
 const algorithms = [

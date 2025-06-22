@@ -39,10 +39,10 @@ public class EmailService {
 
     public void sendSimpleMessage(MailBody mailBody) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(mailBody.to());
+        message.setTo(mailBody.getTo());
         message.setFrom(supportEmail);
-        message.setSubject(mailBody.subject());
-        message.setText(mailBody.text());
+        message.setSubject(mailBody.getSubject());
+        message.setText(mailBody.getText());
         mailSender.send(message);
     }
 } 

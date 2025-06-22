@@ -1,5 +1,7 @@
 package com.dsavisualizer.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -32,6 +34,14 @@ public class PracticeProblem {
     @Column(columnDefinition = "TEXT")
     private String solution;
 
+
+
+    @Column(columnDefinition = "TEXT")
+    private String boilerPlateCode;
+
+    @Column(name = "method_name")
+    private String methodName;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -63,15 +73,35 @@ public class PracticeProblem {
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
+    @JsonProperty("topicId")
     public String getTopicId() { return topicId; }
     public void setTopicId(String topicId) { this.topicId = topicId; }
 
+    @JsonProperty("testCases")
     public String getTestCases() { return testCases; }
     public void setTestCases(String testCases) { this.testCases = testCases; }
 
     public String getSolution() { return solution; }
     public void setSolution(String solution) { this.solution = solution; }
 
+    @JsonProperty("createdAt")
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    @JsonProperty("boilerPlateCode")
+    public String getBoilerPlateCode() {
+        return boilerPlateCode;
+    }
+    public void setBoilerPlateCode(String boilerPlateCode) {
+        this.boilerPlateCode = boilerPlateCode;
+    }
+
+    @JsonProperty("methodName")
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
 }

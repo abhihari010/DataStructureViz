@@ -56,7 +56,16 @@ export function useAuthJWT() {
         lastName: data.lastName,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation('/');
+      
+      // Check for return URL in session storage
+      const returnUrl = sessionStorage.getItem('returnUrl');
+      if (returnUrl) {
+        sessionStorage.removeItem('returnUrl');
+        window.location.href = returnUrl; // Use window.location for full page reload
+      } else {
+        setLocation('/');
+      }
+      
       setTimeout(() => setIsAuthTransitioning(false), 600);
     },
     onError: (error) => {

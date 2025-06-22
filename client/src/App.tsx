@@ -18,6 +18,10 @@ import Settings from "@/pages/settings";
 import ResetPassword from "@/pages/reset-password";
 import VerifyOtp from "@/pages/verify-otp";
 import ForgotPassword from "@/pages/forgot-password";
+import Topics from "@/pages/topics";
+import ProblemPage from "@/pages/problems/[pid]";
+import Workspace from "@/components/Workspace/workspace";
+
 
 function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
@@ -41,12 +45,13 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Home} />
-          <Route path="/stack" component={Stack} />
-          <Route path="/queue" component={Queue} />
-          <Route path="/linked-list" component={LinkedList} />
-          <Route path="/binary-tree" component={BinaryTree} />
+          <Route path="/topics" component={Topics} />
+          <Route path="/topics/stack" component={Stack} />
+          <Route path="/topics/queue" component={Queue} />
+          <Route path="/topics/linked-list" component={LinkedList} />
+          <Route path="/topics/binary-tree" component={BinaryTree} />
           <Route path="/settings" component={Settings} />
-
+          <Route path="/problems/:pid" component={ProblemPage} />
           {/*
           <Route path="/graph" component={Graph} />
           <Route path="/bubble-sort" component={BubbleSort} />
