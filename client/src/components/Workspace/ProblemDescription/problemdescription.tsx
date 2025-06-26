@@ -56,11 +56,11 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   // Handles the like button click
   const handleLike = () => {
     if (liked) {
-      setLikeCount(likeCount - 1);
-      setLiked(false);
+      setLikeCount((prev) => prev - 1);
+      setLiked((prev) => !prev);
     } else {
-      setLikeCount(likeCount + 1);
-      setLiked(true);
+      setLikeCount((prev) => prev + 1);
+      setLiked((prev) => !prev);
       if (disliked) {
         setDisliked(false);
       }
@@ -70,12 +70,12 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   // Handles the dislike button click
   const handleDislike = () => {
     if (disliked) {
-      setDisliked(false);
+      setDisliked((prev) => !prev);
     } else {
-      setDisliked(true);
+      setDisliked((prev) => !prev);
       if (liked) {
-        setLikeCount(likeCount - 1);
-        setLiked(false);
+        setLikeCount((prev) => prev - 1);
+        setLiked((prev) => !prev);
       }
     }
   };

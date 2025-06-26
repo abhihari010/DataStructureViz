@@ -45,12 +45,18 @@ export const getAllProblems = async (): Promise<PracticeProblem[]> => {
   }
 };
 
+export interface TestCaseResult {
+  case_number: number;
+  stdin:      string;
+  stdout:     string;
+  stderr?:    string;
+  passed:     boolean;
+}
+
 export interface ExecuteCodeRequest {
   code: string;
   language: string;
   problemId: number;
-  input: any;
-  expectedOutput: any;
 }
 
 export interface ExecuteCodeResponse {
@@ -58,7 +64,8 @@ export interface ExecuteCodeResponse {
   output: string;
   error?: string;
   passed: boolean;
-  expectedOutput?: any;
+  results?: TestCaseResult[];
+  test_case_results?: TestCaseResult[];
 }
 
 export const executeCode = async (request: ExecuteCodeRequest): Promise<ExecuteCodeResponse> => {

@@ -17,8 +17,8 @@ interface PlaygroundProps {
   onCodeChange: (code: string) => void;
   onLanguageChange: (language: string) => void;
   isRunning: boolean;
-  consoleOutput?: string;
-  onClearConsole?: () => void;
+  onRunTests?: () => Promise<void>;
+  onSubmit?: () => Promise<void>;
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
@@ -27,20 +27,11 @@ const Playground: React.FC<PlaygroundProps> = ({
   onCodeChange,
   onLanguageChange,
   isRunning,
-  consoleOutput = '',
-  onClearConsole = () => {},
+  onRunTests,
+  onSubmit,
 }) => {
-  const [activeTab, setActiveTab] = useState<'code' | 'console'>('code');
-  const [localConsoleOutput, setLocalConsoleOutput] = useState<string>('');
-  
-  // Sync with parent's console output if provided
-  useEffect(() => {
-    if (consoleOutput !== undefined) {
-      setLocalConsoleOutput(consoleOutput);
-    }
-  }, [consoleOutput]);
+  const [activeTab, setActiveTab] = useState<'code'>('code');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const consoleRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<any>(null);
 
   const handleEditorDidMount = (editor: any) => {
@@ -49,38 +40,17 @@ const Playground: React.FC<PlaygroundProps> = ({
     editor.focus();
   };
 
-  const handleRunCode = async () => {
+
+  const handleRunTests = async () => {
     if (isRunning) return;
-
-    setActiveTab('console');
-    const newOutput = 'Running code...\n';
-    setLocalConsoleOutput(newOutput);
-
-    // In a real implementation, this would execute the code and show the output
-    // For now, we'll just simulate it
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const output = 'Code executed successfully!\n\nNote: This is a simulation. In a real implementation, this would show the actual output.';
-      setLocalConsoleOutput(prev => prev + output);
-    } catch (error) {
-      const errorMsg = 'Error: ' + (error instanceof Error ? error.message : 'Unknown error');
-      setLocalConsoleOutput(prev => prev + errorMsg);
-    }
-  };
-  
-  const handleClearConsole = () => {
-    setLocalConsoleOutput('');
-    onClearConsole();
+    if (onRunTests) await onRunTests();
   };
 
-  const handleSubmit = () => {
-    // Add submission logic here
-    setActiveTab('console');
-    setLocalConsoleOutput('Submitting your solution...\n');
-
-    setTimeout(() => {
-      setLocalConsoleOutput(prev => prev + '✓ Solution submitted successfully!');
-    }, 1000);
+  const handleSubmit = async () => {
+    if (isRunning) return;
+    setIsSubmitting(true);
+    if (onSubmit) await onSubmit();
+    setIsSubmitting(false);
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -91,117 +61,72 @@ const Playground: React.FC<PlaygroundProps> = ({
     onLanguageChange(language);
   };
 
+  
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] text-white">
       {/* Toolbar */}
       <div className="flex items-center justify-between bg-[#252526] px-4 py-2 border-b border-gray-700">
         <div className="flex space-x-2">
           <button
-            onClick={handleRunCode}
+            onClick={handleRunTests}
             disabled={isRunning}
-            className={`px-3 py-1.5 text-sm rounded-md flex items-center ${
+            className={`px-3 py-1.5 text-sm rounded-md ${
               isRunning
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
-            <Play size={14} className="mr-1.5" />
-            {isRunning ? 'Running...' : 'Run'}
+            Run Test Cases
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="px-3 py-1.5 text-sm flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:bg-blue-800 disabled:text-blue-300"
+            disabled={isRunning}
+            className={`px-3 py-1.5 text-sm rounded-md ${
+              isRunning
+                ? 'bg-blue-800 text-blue-300 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
           >
-            <Send size={14} />
-            <span>Submit</span>
+            Submit
           </button>
         </div>
         <div className="flex items-center space-x-2">
+          {/* language selector */}
           <select
             value={language}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            className="bg-[#3e3e42] text-white text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={e => onLanguageChange(e.target.value)}
             disabled={isRunning}
+            className="bg-[#3e3e42] text-white text-sm rounded px-2 py-1 border border-gray-600"
           >
-            {languageOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {languageOptions.map(o => (
+              <option key={o.value} value={o.value}>
+                {o.label}
               </option>
             ))}
           </select>
-          <button
-            onClick={handleClearConsole}
-            disabled={isRunning}
-            className="p-1 text-gray-400 hover:text-white disabled:opacity-50"
-            title="Clear console"
-          >
-            <X size={16} />
-          </button>
-          <button className="p-1 text-gray-400 hover:text-white">
+          <button className="p-1 text-gray-400 hover:text-white" title="Settings">
             <Settings size={18} />
           </button>
+          <button className="p-1 text-gray-400 hover:text-white" title="Clear console">
+            <X size={16} />
+          </button>
         </div>
       </div>
 
-      {/* Editor and Console Tabs */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex border-b border-gray-700 bg-[#252526]">
-          <button
-            onClick={() => setActiveTab('code')}
-            className={`px-4 py-2 text-sm font-medium ${
-              activeTab === 'code'
-                ? 'text-white border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Solution.{language}
-          </button>
-          <button
-            onClick={() => setActiveTab('console')}
-            className={`px-4 py-2 text-sm font-medium flex items-center space-x-1 ${
-              activeTab === 'console'
-                ? 'text-white border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Terminal size={14} />
-            <span>Console</span>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-hidden">
-          {activeTab === 'code' ? (
-            <Editor
-              height="100%"
-              defaultLanguage={language}
-              language={language}
-              theme="vs-dark"
-              value={code}
-              onChange={handleEditorChange}
-              onMount={handleEditorDidMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: 'on',
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                padding: { top: 10 },
-              }}
-            />
-          ) : (
-            <div 
-              ref={consoleRef}
-              className="h-full bg-[#1e1e1e] p-4 font-mono text-sm text-gray-200 overflow-auto whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ 
-                __html: localConsoleOutput ? 
-                  localConsoleOutput.replace(/\n/g, '<br>') : 
-                  'Run your code to see the output here...' 
-              }}
-            />
-          )}
-        </div>
-      </div>
+      {/* Editor */}
+      <Editor
+        height="100%"
+        language={language}
+        theme="vs-dark"
+        value={code}
+        onMount={handleEditorDidMount}
+        onChange={v => onCodeChange(v || '')}
+        options={{
+          minimap: { enabled: false },
+          automaticLayout: true,
+          fontSize: 14,
+        }}
+      />
     </div>
   );
 };

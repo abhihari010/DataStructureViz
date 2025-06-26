@@ -1,4 +1,5 @@
 package com.dsavisualizer.dto;
 
-public record Status() {
+public record Status(Integer id,
+                     String description) {
 }

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import org.hibernate.annotations.Type;
 
@@ -29,7 +31,7 @@ public class PracticeProblem {
 
     @Type(JsonBinaryType.class)
     @Column(name = "test_cases", columnDefinition = "jsonb")
-    private String testCases;
+    private List<Map<String, Object>> testCases;
 
     @Column(columnDefinition = "TEXT")
     private String solution;
@@ -78,8 +80,8 @@ public class PracticeProblem {
     public void setTopicId(String topicId) { this.topicId = topicId; }
 
     @JsonProperty("testCases")
-    public String getTestCases() { return testCases; }
-    public void setTestCases(String testCases) { this.testCases = testCases; }
+    public List<Map<String, Object>> getTestCases() { return testCases; }
+    public void setTestCases(List<Map<String, Object>> testCases) { this.testCases = testCases; }
 
     public String getSolution() { return solution; }
     public void setSolution(String solution) { this.solution = solution; }

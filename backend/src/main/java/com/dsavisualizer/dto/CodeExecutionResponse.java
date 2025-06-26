@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -12,8 +14,7 @@ import lombok.Setter;
 public class CodeExecutionResponse {
     // Getters and Setters
     private boolean success;
-    private String output;
-    private String error;
+    private List<TestCaseResult> testCaseResults;
     private boolean passed;
     private Object expectedOutput;
 
