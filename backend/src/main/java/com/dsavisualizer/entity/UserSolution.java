@@ -30,6 +30,12 @@ public class UserSolution {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
+    @Column(name = "runtime")
+    private Double runtime; // in seconds
+
+    @Column(name = "memory")
+    private Integer memory; // in KB
+
     @PrePersist
     protected void onCreate() {
         submittedAt = LocalDateTime.now();
@@ -66,4 +72,10 @@ public class UserSolution {
 
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
+
+    public Double getRuntime() { return runtime; }
+    public void setRuntime(Double runtime) { this.runtime = runtime; }
+
+    public Integer getMemory() { return memory; }
+    public void setMemory(Integer memory) { this.memory = memory; }
 }

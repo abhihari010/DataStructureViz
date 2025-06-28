@@ -7,7 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChartGantt, Bell, Settings, LogOut, User as UserIcon } from "lucide-react";
+import {
+  ChartGantt,
+  Bell,
+  Settings,
+  LogOut,
+  User as UserIcon,
+} from "lucide-react";
 import { Link } from "wouter";
 import { User } from "@/lib/api";
 
@@ -65,11 +71,12 @@ export default function Navigation() {
         </div>
 
         <div className="flex items-center space-x-4">
-
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full p-0"
+              >
                 <Avatar className="h-10 w-10">
                   <AvatarImage
                     src={typedUser?.profileImageUrl}
@@ -92,9 +99,9 @@ export default function Navigation() {
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuItem onClick={logout}>
-  <LogOut className="mr-2 h-4 w-4" />
-  <span>Log out</span>
-</DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

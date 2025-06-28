@@ -103,7 +103,7 @@ export default function Landing() {
                   <CardTitle>Practice Problems</CardTitle>
                   <CardDescription>
                     Solve real coding challenges with instant feedback and
-                    detailed explanations.
+                    solutions.
                   </CardDescription>
                 </CardHeader>
               </Card>

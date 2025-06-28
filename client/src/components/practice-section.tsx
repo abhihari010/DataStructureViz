@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { problemsApi } from "@/lib/api";
 import { Link } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getTopicConfig, TopicConcept } from "@/config/topic-config";
@@ -29,14 +35,14 @@ export default function PracticeSection({ topicId }: PracticeSectionProps) {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return 'bg-green-100 text-green-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'hard':
-        return 'bg-red-100 text-red-800';
+      case "easy":
+        return "bg-green-100 text-green-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "hard":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -75,20 +81,31 @@ export default function PracticeSection({ topicId }: PracticeSectionProps) {
       <Card>
         <CardHeader>
           <CardTitle>Practice Problems</CardTitle>
-          <CardDescription>Apply your knowledge with these problems</CardDescription>
+          <CardDescription>
+            Apply your knowledge with these problems
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {problems.map((problem: PracticeProblem) => (
-              <div key={problem.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div
+                key={problem.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
                 <div>
                   <h4 className="font-medium">{problem.title}</h4>
                   <p className="text-sm text-gray-600">{problem.description}</p>
-                  <Badge className={`mt-2 ${getDifficultyColor(problem.difficulty)}`}>
+                  <Badge
+                    className={`mt-2 ${getDifficultyColor(problem.difficulty)}`}
+                  >
                     {problem.difficulty}
                   </Badge>
                 </div>
-                <Button>Solve</Button>
+                <Link href={`/problems/${problem.id}`}>
+                  <Button asChild>
+                    <span>Solve</span>
+                  </Button>
+                </Link>
               </div>
             ))}
           </div>
@@ -106,11 +123,18 @@ export default function PracticeSection({ topicId }: PracticeSectionProps) {
             {nextSteps.map((step) => (
               <Card key={step.id} className="transition-shadow">
                 <CardContent className="p-0">
-                  <Link href={`/${step.id}`} className="flex items-center space-x-4 py-4 px-4 hover:bg-gray-50 rounded-lg transition group">
+                  <Link
+                    href={`/${step.id}`}
+                    className="flex items-center space-x-4 py-4 px-4 hover:bg-gray-50 rounded-lg transition group"
+                  >
                     <step.icon className="h-6 w-6 text-primary" />
                     <div>
-                      <h4 className="font-medium group-hover:underline">{step.name}</h4>
-                      <p className="text-sm text-gray-600">Learn about {step.name.toLowerCase()}</p>
+                      <h4 className="font-medium group-hover:underline">
+                        {step.name}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Learn about {step.name.toLowerCase()}
+                      </p>
                     </div>
                   </Link>
                 </CardContent>

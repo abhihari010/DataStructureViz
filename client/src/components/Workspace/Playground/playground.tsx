@@ -19,6 +19,8 @@ interface PlaygroundProps {
   isRunning: boolean;
   onRunTests?: () => Promise<void>;
   onSubmit?: () => Promise<void>;
+  canSubmit?: boolean;
+  isSubmitting?: boolean;
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
@@ -29,9 +31,10 @@ const Playground: React.FC<PlaygroundProps> = ({
   isRunning,
   onRunTests,
   onSubmit,
+  canSubmit = true,
+  isSubmitting = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'code'>('code');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const editorRef = useRef<any>(null);
 
   const handleEditorDidMount = (editor: any) => {
@@ -47,10 +50,8 @@ const Playground: React.FC<PlaygroundProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (isRunning) return;
-    setIsSubmitting(true);
+    if (isRunning || isSubmitting) return;
     if (onSubmit) await onSubmit();
-    setIsSubmitting(false);
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -80,14 +81,14 @@ const Playground: React.FC<PlaygroundProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isRunning}
+            disabled={isRunning || !canSubmit || isSubmitting}
             className={`px-3 py-1.5 text-sm rounded-md ${
-              isRunning
+              isRunning || !canSubmit || isSubmitting
                 ? 'bg-blue-800 text-blue-300 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
-            Submit
+            {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>
         <div className="flex items-center space-x-2">

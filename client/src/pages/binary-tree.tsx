@@ -28,6 +28,7 @@ import CodePanel from "@/components/code-panel";
 import BinaryTreeVisualization from "@/components/visualizations/BinaryTreeVisualization";
 import Navigation from "@/components/navigation";
 import Sidebar from "@/components/sidebar";
+import PracticeSection from "@/components/practice-section";
 
 // Code examples for different languages
 const codeExamples = {
@@ -37,7 +38,6 @@ class Node {
     this.value = value;
     this.left = null;
     this.right = null;
-    this.height = 1; // For AVL tree implementation
   }
 }
 
@@ -140,7 +140,6 @@ class Node:
         self.value = value
         self.left = None
         self.right = None
-        self.height = 1  # For AVL tree implementation
 
 class BinarySearchTree:
     def __init__(self):
@@ -230,7 +229,7 @@ print(bst.find(99))  # False`,
 class Node {
     int value;
     Node left, right;
-    int height;  // For AVL tree implementation
+
     
     public Node(int value) {
         this.value = value;
@@ -341,53 +340,7 @@ public class BinarySearchTree {
 }`
 };
 
-const KeyConcepts = () => (
-  <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden mb-6">
-    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-        Key Concepts
-      </h3>
-    </div>
-    <div className="p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">Binary Tree</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              A tree data structure where each node has at most two children, referred to as the left and right child.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">Binary Search Tree</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              A binary tree where for each node, all elements in the left subtree are less than the node's value, 
-              and all elements in the right subtree are greater than the node's value.
-            </p>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">Tree Traversals</h4>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
-              <li><strong>In-order</strong>: Left, Root, Right</li>
-              <li><strong>Pre-order</strong>: Root, Left, Right</li>
-              <li><strong>Post-order</strong>: Left, Right, Root</li>
-              <li><strong>Level-order</strong>: Level by level, left to right</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">Time Complexity</h4>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
-              <li><strong>Search</strong>: O(log n) average, O(n) worst case</li>
-              <li><strong>Insert</strong>: O(log n) average, O(n) worst case</li>
-              <li><strong>Delete</strong>: O(log n) average, O(n) worst case</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
 
 export default function BinaryTreePage() {
   const { theme } = useTheme();
@@ -407,15 +360,15 @@ export default function BinaryTreePage() {
             <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Binary Search Tree</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Binary Tree</h1>
                   <p className="text-gray-600 dark:text-gray-300 mt-1">
-                    A hierarchical data structure where each node has at most two children
+                    A tree data structure where each node has at most two children, referred to as the left and right child.
                   </p>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                     <Star className="w-3 h-3 mr-1" />
-                      Intermediate
+                    Intermediate
                   </Badge>
                 </div>
               </div>
@@ -424,12 +377,11 @@ export default function BinaryTreePage() {
             {/* Main Content */}
             <div className="flex-1 p-6 space-y-6">
               {/* Key Concepts Section */}
-              <KeyConcepts />
               
               {/* Main Content Area */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Left Column - Code Panel */}
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-2">
                   <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-full">
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                       <div className="flex justify-between items-center">
@@ -458,9 +410,8 @@ export default function BinaryTreePage() {
                           onValueChange={setActiveTab}
                           className="w-full"
                         >
-                          <TabsList className="grid w-full grid-cols-2">
+                          <TabsList className="w-full">
                             <TabsTrigger value="implementation">Implementation</TabsTrigger>
-                            <TabsTrigger value="traversal">Traversals</TabsTrigger>
                           </TabsList>
                         </Tabs>
                       </div>
@@ -472,7 +423,7 @@ export default function BinaryTreePage() {
                 </div>
                 
                 {/* Right Column - Visualization and Traversals */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-3 space-y-6">
                   {/* Main Visualization */}
                   <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-visible flex flex-col">
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -489,62 +440,7 @@ export default function BinaryTreePage() {
 
               {/* Practice Section */}
               <div className="mt-6">
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      Practice Problems
-                    </h3>
-                  </div>
-                  <div className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base font-medium">
-                            Inorder Traversal
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Implement an inorder traversal of a binary search tree.
-                          </p>
-                          <Button variant="outline" size="sm" className="mt-3">
-                            Try it out
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base font-medium">
-                            Validate BST
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Check if a binary tree is a valid binary search tree.
-                          </p>
-                          <Button variant="outline" size="sm" className="mt-3">
-                            Try it out
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base font-medium">
-                            Lowest Common Ancestor
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            Find the lowest common ancestor of two nodes in a BST.
-                          </p>
-                          <Button variant="outline" size="sm" className="mt-3">
-                            Try it out
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </div>
+                <PracticeSection topicId="binary-tree" />
               </div>
             </div>
           </div>

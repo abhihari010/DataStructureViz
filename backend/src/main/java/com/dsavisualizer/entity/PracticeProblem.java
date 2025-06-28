@@ -33,10 +33,20 @@ public class PracticeProblem {
     @Column(name = "test_cases", columnDefinition = "jsonb")
     private List<Map<String, Object>> testCases;
 
+    @Type(JsonBinaryType.class)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, Map<String, String>> solutions; // Key: language, Value: { code: string, timeComplexity: string, spaceComplexity: string }
+
+    @Type(JsonBinaryType.class)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, String> timeComplexity; // Key: language, Value: time complexity
+
+    @Type(JsonBinaryType.class)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, String> spaceComplexity; // Key: language, Value: space complexity
+
     @Column(columnDefinition = "TEXT")
     private String solution;
-
-
 
     @Column(columnDefinition = "TEXT")
     private String boilerPlateCode;
@@ -106,4 +116,16 @@ public class PracticeProblem {
     public void setMethodName(String methodName) {
         this.methodName = methodName;
     }
+
+    @JsonProperty("solutions")
+    public Map<String, Map<String, String>> getSolutions() { return solutions; }
+    public void setSolutions(Map<String, Map<String, String>> solutions) { this.solutions = solutions; }
+
+    @JsonProperty("timeComplexity")
+    public Map<String, String> getTimeComplexity() { return timeComplexity; }
+    public void setTimeComplexity(Map<String, String> timeComplexity) { this.timeComplexity = timeComplexity; }
+
+    @JsonProperty("spaceComplexity")
+    public Map<String, String> getSpaceComplexity() { return spaceComplexity; }
+    public void setSpaceComplexity(Map<String, String> spaceComplexity) { this.spaceComplexity = spaceComplexity; }
 }

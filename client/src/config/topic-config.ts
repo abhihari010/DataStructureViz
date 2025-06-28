@@ -161,6 +161,34 @@ export const topicConfigs: TopicConfigs = {
       { id: "bloom-filter", name: "Bloom Filter", icon: GitPullRequest, path: "/bloom-filter" },
     ],
   },
+  'binary-tree': {
+    keyConcepts: [
+      {
+        icon: CheckCircle,
+        title: "Binary Tree",
+        description: "A tree data structure where each node has at most two children, referred to as the left and right child.",
+      },
+      {
+        icon: CheckCircle,
+        title: "Binary Search Tree",
+        description: "A binary tree where for each node, all elements in the left subtree are less than the node's value, and all elements in the right subtree are greater than the node's value.",
+      },
+      {
+        icon: CheckCircle,
+        title: "Tree Traversals",
+        description: "In-order, pre-order, post-order, and level-order traversals.",
+      },
+      {
+        icon: CheckCircle,
+        title: "Time Complexity",
+        description: "Search, Insert, Delete - O(log n) average, O(n) worst case.",
+      },
+    ],
+    nextSteps: [
+      { id: "queue", name: "Queue", icon: List, path: "/queue" },
+      { id: "graph", name: "Graph", icon: Network, path: "/graph" },
+    ],
+  },
 };
 
 export const getTopicConfig = (topicId: string): TopicConfig => {

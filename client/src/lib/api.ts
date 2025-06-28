@@ -143,6 +143,8 @@ export const solutionsApi = {
     code: string;
     language: string;
     passed?: boolean;
+    runtime?: number;
+    memory?: number;
   }) => {
     const response = await api.post("/solutions", data);
     return response.data;

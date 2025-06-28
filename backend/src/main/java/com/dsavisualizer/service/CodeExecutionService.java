@@ -35,7 +35,9 @@ public class CodeExecutionService {
                     false,
                     Collections.emptyList(),
                     false,
-                    null
+                    null,
+                    0.0,
+                    0
             );
         }
 
@@ -47,25 +49,33 @@ public class CodeExecutionService {
                         false,
                         Collections.emptyList(),
                         false,
-                        null
+                        null,
+                        0.0,
+                        0
                 );
             }
 
             // 3) Resolve language
             String lang = request.getLanguage().toLowerCase();
             int langId  = judge0Service.getLanguageId(lang);
+            System.out.println("[DEBUG] Language: " + lang + ", Language ID: " + langId);
             if (langId == 0) {
+                System.out.println("[DEBUG] Unknown language, exiting early.");
                 return new CodeExecutionResponse(
                         false,
                         Collections.emptyList(),
                         false,
-                        null
+                        null,
+                        0.0,
+                        0
                 );
             }
 
             // 4) Loop through every test case
             List<TestCaseResult> results = new ArrayList<>();
             boolean allPassed = true;
+            double totalRuntime = 0.0;
+            int maxMemory = 0;
 
             for (int i = 0; i < testCases.size(); i++) {
                 Map<String, Object> tc = testCases.get(i);
@@ -105,6 +115,8 @@ public class CodeExecutionService {
                     case "cpp":
                     case "c++":
                         fullSource = wrapCpp(userCode, method);
+                        // Debug: Log the full C++ source code
+                        System.out.println("[DEBUG] C++ Source Code Sent to Judge0:\n" + fullSource);
                         break;
                     default:
                         fullSource = userCode;
@@ -120,6 +132,12 @@ public class CodeExecutionService {
                         .submitAndWait(subReq)
                         .block();
 
+                // Aggregate runtime and memory
+                if (jr != null) {
+                    if (jr.time() != null) totalRuntime += jr.time();
+                    if (jr.memory() != null && jr.memory() > maxMemory) maxMemory = jr.memory().intValue();
+                }
+
                 // e) Collect stdout/stderr
                 String actual = jr.stdout() != null
                         ? jr.stdout().trim()
@@ -128,9 +146,17 @@ public class CodeExecutionService {
                         ? jr.stderr()
                         : jr.compile_output();
 
-                // f) Determine pass/fail
-                boolean passedCase = jr.status().id() == 3
-                        && actual.equals(expect);
+                // Fallback: If all outputs are empty, set a generic error message
+                boolean passedCase;
+                if ((actual.isEmpty()) &&
+                        (stderr == null || stderr.isEmpty())) {
+                    stderr = "No output or error. Please make sure your using the right language.";
+                    passedCase = false;
+                } else {
+                    // f) Determine pass/fail
+                    passedCase = jr.status() != null && jr.status().id() == 3
+                            && actual.equals(expect);
+                }
 
                 if (!passedCase) {
                     allPassed = false;
@@ -151,16 +177,28 @@ public class CodeExecutionService {
                     true,
                     results,
                     allPassed,
-                    null
+                    null,
+                    totalRuntime,
+                    maxMemory
             );
 
         } catch (Exception e) {
-            // On any error, return an empty-results response
+            // On any error, return a single test-case result with the error message
+            List<TestCaseResult> errorResults = new ArrayList<>();
+            errorResults.add(new TestCaseResult(
+                1,
+                "", // stdin unknown
+                "",
+                "Internal error: " + e.getMessage(),
+                false
+            ));
             return new CodeExecutionResponse(
-                    false,
-                    Collections.emptyList(),
-                    false,
-                    null
+                false,
+                errorResults,
+                false,
+                null,
+                0.0,
+                0
             );
         }
     }
@@ -168,14 +206,9 @@ public class CodeExecutionService {
     // ─── Wrappers ──────────────────────────────────────────────────────────────
 
     private String wrapPython(String userCode, String methodName) {
-        String indented = Arrays.stream(userCode.split("\n"))
-                .map(line -> "    " + line)
-                .collect(Collectors.joining("\n"));
-
         return """
             import sys, json
 
-            class Solution:
             %s
 
             if __name__ == "__main__":
@@ -184,26 +217,28 @@ public class CodeExecutionService {
                     arg = json.loads(raw)
                 except:
                     arg = raw
+                # Replace 'Solution' with your actual class name
                 sol = Solution()
                 res = sol.%s(arg)
                 if isinstance(res, bool):
                     print(str(res).lower())
                 else:
                     print(json.dumps(res))
-            """.formatted(indented, methodName);
+            """.formatted(userCode, methodName);
     }
 
     private String wrapJava(String userCode, String methodName) {
         return """
             import java.util.Scanner;
 
-            public class Solution {
             %s
 
+            public class Main {
                 public static void main(String[] args) {
                     Scanner sc = new Scanner(System.in);
                     String s = sc.nextLine();
                     sc.close();
+                    // Replace 'Solution' with your actual class name
                     Solution sol = new Solution();
                     boolean res = sol.%s(s);
                     System.out.println(res);
@@ -216,15 +251,14 @@ public class CodeExecutionService {
         return """
             const readline = require('readline');
 
-            class Solution {
             %s
-            }
 
             (async () => {
                 const rl = readline.createInterface({ input: process.stdin });
                 const raw = await new Promise(res => rl.on('line', line => { rl.close(); res(line); }));
                 let arg;
                 try { arg = JSON.parse(raw); } catch { arg = raw; }
+                // Replace 'Solution' with your actual class name
                 const sol = new Solution();
                 const out = sol.%s(arg);
                 console.log(out);
@@ -243,6 +277,7 @@ public class CodeExecutionService {
             int main() {
                 string s;
                 if (!getline(cin, s)) return 0;
+                // Replace 'Solution' with your actual class name
                 Solution sol;
                 bool res = sol.%s(s);
                 cout << (res ? "true" : "false");

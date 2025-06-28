@@ -2,6 +2,24 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
+export interface Example {
+  id: number;
+  input: string;
+  output: string;
+  explanation?: string;
+}
+
+export interface Constraint {
+  id: string;
+  constraint: string;
+}
+
+export interface Solution {
+  code: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+}
+
 export interface PracticeProblem {
   id: number;
   title: string;
@@ -9,10 +27,22 @@ export interface PracticeProblem {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   topicId: string;
   testCases: string;
-  solution?: string;
+  solutions?: {
+    [key: string]: Solution;
+  };
+  timeComplexity?: {
+    [key: string]: string;
+  };
+  spaceComplexity?: {
+    [key: string]: string;
+  };
   boilerPlateCode?: string;
   createdAt: string;
   topic?: string;
+  examples?: Example[];
+  constraints?: Constraint[];
+  // For backward compatibility
+  solution?: string;
 }
 
 export const getProblemById = async (id: number): Promise<PracticeProblem> => {
@@ -80,3 +110,12 @@ export const executeCode = async (request: ExecuteCodeRequest): Promise<ExecuteC
     throw error;
   }
 };
+
+export async function submitSolutionApi({ code, language, problemId }: { code: string, language: string, problemId: number }) {
+  return fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, language, problemId }),
+  }).then(res => res.json());
+}
+

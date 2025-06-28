@@ -17,6 +17,8 @@ public class CodeExecutionResponse {
     private List<TestCaseResult> testCaseResults;
     private boolean passed;
     private Object expectedOutput;
+    private Double runtime; // in seconds
+    private Integer memory; // in KB
 
 
 }

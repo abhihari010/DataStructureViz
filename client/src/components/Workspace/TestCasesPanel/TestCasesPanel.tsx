@@ -29,8 +29,8 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults 
         .map(([key, value]) => `${key} = ${JSON.stringify(value)}`)
         .join('\n');
     }
-    return JSON.stringify(input, null, 2);
-  };
+    return Array.isArray(input) ? JSON.stringify(input) : JSON.stringify(input, null, 2);
+    };
 
   const getResultStatus = () => {
     if (!allTestsRun) return null;

@@ -25,7 +25,8 @@ public class Judge0Service {
             "java", 62,
             "python", 71,
             "javascript", 63,
-            "c++", 54
+            "c++", 54,
+            "cpp", 54
     );
 
     public Mono<Judge0Result> submitAndWait(Judge0SubmissionRequest req) {
