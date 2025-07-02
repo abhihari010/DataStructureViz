@@ -125,10 +125,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     }
   };
 
-  // Toggle example expansion
-  const toggleExample = (index: number) => {
-    setExpandedExample(prev => prev === index ? null : index);
-  };
+
 
   // Save notes to localStorage
   useEffect(() => {
@@ -279,8 +276,8 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       <div className="prose prose-invert max-w-none">
         <ReactMarkdown>{problemStatement}</ReactMarkdown>
       </div>
-
-      {/* Tree SVG visualization for tree problems */}
+      
+      
       {isTreeProblem && firstExampleInput && (
         <div className="mb-6">
           <div className="font-semibold mb-1">Tree Visualization (Example 1):</div>
@@ -288,7 +285,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
         </div>
       )}
 
-      {/* LeetCode-style Examples */}
+      
       {examples && examples.length > 0 && (
         <div className="mt-6">
           {[...examples].slice(0, 2).map((example, idx) => (
@@ -296,20 +293,20 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
               <div className="font-semibold mb-1">Example {idx + 1}:</div>
               <pre className="bg-gray-900 rounded p-3 text-sm mb-1">
                 <span className="font-bold">Input:</span> {example.input}
-              </pre>
+                      </pre>
               <pre className="bg-gray-900 rounded p-3 text-sm">
                 <span className="font-bold">Output:</span> {example.output}
-              </pre>
-              {example.explanation && (
+                      </pre>
+                    {example.explanation && (
                 <div className="bg-gray-900 rounded p-3 text-sm mt-1">
                   <span className="font-bold">Explanation:</span> {example.explanation}
-                </div>
-              )}
-            </div>
-          ))}
+                  </div>
+                )}
+              </div>
+            ))}
         </div>
       )}
-
+      
       {constraints.length > 0 && (
         <div className="mt-6">
           <h3 className="text-sm font-semibold text-gray-300 mb-2">Constraints:</h3>

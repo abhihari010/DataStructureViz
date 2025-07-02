@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Mail } from "lucide-react";
 import { ChartGantt } from "lucide-react";
 
 type LoginFormData = {
@@ -21,6 +21,8 @@ export default function Login() {
   const { login } = useAuthJWT();
   const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isEmailNotVerified, setIsEmailNotVerified] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
   
   const {
     register,
@@ -28,11 +30,15 @@ export default function Login() {
     setError: setFormError,
     formState: { errors, isSubmitting },
     resetField,
-    setValue
+    setValue,
+    watch
   } = useForm<LoginFormData>();
+
+  const watchedEmail = watch('email');
 
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null);
+    setIsEmailNotVerified(false);
     
     try {
       await login(data);
@@ -45,6 +51,11 @@ export default function Login() {
       
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
+        // Check if this is an email verification error
+        if (errorMessage.includes("verify your email")) {
+          setIsEmailNotVerified(true);
+          setUserEmail(data.email);
+        }
       } else if (error?.message) {
         errorMessage = error.message;
       } else if (error?.response?.status === 401) {
@@ -67,6 +78,30 @@ export default function Login() {
     }
   }
 
+  const handleResendVerification = async () => {
+    try {
+      const response = await fetch(`/api/auth/resend-verification?email=${encodeURIComponent(userEmail)}`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Could not resend verification email");
+      }
+
+      toast({
+        title: "Verification Email Sent!",
+        description: "Please check your email and click the verification link.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Could not resend verification email",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
       <Card className="w-full max-w-md">
@@ -81,10 +116,36 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {serverError && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant={isEmailNotVerified ? "default" : "destructive"} className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {serverError}
+                  {isEmailNotVerified ? (
+                    <div className="space-y-2">
+                      <p>Please verify your email before logging in.</p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResendVerification}
+                          className="flex items-center gap-2"
+                        >
+                          <Mail className="h-4 w-4" />
+                          Resend Verification Email
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLocation(`/verify-email?email=${encodeURIComponent(userEmail)}`)}
+                        >
+                          Verify Email
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    serverError
+                  )}
                 </AlertDescription>
               </Alert>
             )}

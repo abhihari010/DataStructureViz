@@ -21,7 +21,8 @@ import ForgotPassword from "@/pages/forgot-password";
 import Topics from "@/pages/topics";
 import ProblemPage from "@/pages/problems/[pid]";
 import Workspace from "@/components/Workspace/workspace";
-
+import Graph from "@/pages/graph";
+import Practice from "@/pages/practice";
 
 function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
@@ -52,6 +53,8 @@ function Router() {
           <Route path="/topics/binary-tree" component={BinaryTree} />
           <Route path="/settings" component={Settings} />
           <Route path="/problems/:pid" component={ProblemPage} />
+          <Route path="/topics/graph" component={Graph} />
+          <Route path="/practice" component={Practice} />
           {/*
           <Route path="/graph" component={Graph} />
           <Route path="/bubble-sort" component={BubbleSort} />

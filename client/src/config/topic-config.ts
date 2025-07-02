@@ -42,8 +42,8 @@ export const topicConfigs: TopicConfigs = {
       },
     ],
     nextSteps: [
-      { id: "queue", name: "Queue", icon: List, path: "/queue" },
-      { id: "linked-list", name: "Linked List", icon: LinkIcon, path: "/linked-list" },
+      { id: "queue", name: "Queue", icon: List, path: "/topics/queue" },
+      { id: "linked-list", name: "Linked List", icon: LinkIcon, path: "/topics/linked-list" },
     ],
   },
   queue: {
@@ -65,8 +65,8 @@ export const topicConfigs: TopicConfigs = {
       },
     ],
     nextSteps: [
-      { id: "stack", name: "Stack", icon: Layers, path: "/stack" },
-      { id: "deque", name: "Deque", icon: GitCompare, path: "/deque" },
+      { id: "stack", name: "Stack", icon: Layers, path: "/topics/stack" },
+      { id: "deque", name: "Deque", icon: GitCompare, path: "/topics/deque" },
     ],
   },
   'linked-list': {
@@ -89,7 +89,7 @@ export const topicConfigs: TopicConfigs = {
     ],
     nextSteps: [
       { id: "doubly-linked-list", name: "Doubly Linked List", icon: GitMerge, path: "/doubly-linked-list" },
-      { id: "stack", name: "Stack", icon: Layers, path: "/stack" },
+      { id: "stack", name: "Stack", icon: Layers, path: "/topics/stack" },
     ],
   },
   tree: {
@@ -111,8 +111,8 @@ export const topicConfigs: TopicConfigs = {
       },
     ],
     nextSteps: [
-      { id: "binary-search-tree", name: "BST", icon: GitBranch, path: "/binary-search-tree" },
-      { id: "graph", name: "Graph", icon: Network, path: "/graph" },
+      { id: "binary-search-tree", name: "BST", icon: GitBranch, path: "/topics/binary-search-tree" },
+      { id: "graph", name: "Graph", icon: Network, path: "/topics/graph" },
     ],
   },
   graph: {
@@ -134,8 +134,8 @@ export const topicConfigs: TopicConfigs = {
       },
     ],
     nextSteps: [
-      { id: "dijkstra", name: "Dijkstra's", icon: Hash, path: "/dijkstra" },
-      { id: "tree", name: "Tree", icon: GitBranch, path: "/tree" },
+      { id: "dijkstra", name: "Dijkstra's", icon: Hash, path: "/topics/dijkstra" },
+      { id: "tree", name: "Tree", icon: GitBranch, path: "/topics/tree" },
     ],
   },
   hash: {
@@ -157,8 +157,8 @@ export const topicConfigs: TopicConfigs = {
       },
     ],
     nextSteps: [
-      { id: "hashmap", name: "Hash Map", icon: Cpu, path: "/hashmap" },
-      { id: "bloom-filter", name: "Bloom Filter", icon: GitPullRequest, path: "/bloom-filter" },
+      { id: "hashmap", name: "Hash Map", icon: Cpu, path: "/topics/hashmap" },
+      { id: "bloom-filter", name: "Bloom Filter", icon: GitPullRequest, path: "/topics/bloom-filter" },
     ],
   },
   'binary-tree': {
@@ -185,8 +185,8 @@ export const topicConfigs: TopicConfigs = {
       },
     ],
     nextSteps: [
-      { id: "queue", name: "Queue", icon: List, path: "/queue" },
-      { id: "graph", name: "Graph", icon: Network, path: "/graph" },
+      { id: "queue", name: "Queue", icon: List, path: "/topics/queue" },
+      { id: "graph", name: "Graph", icon: Network, path: "/topics/graph" },
     ],
   },
 };
@@ -211,8 +211,8 @@ export const getTopicConfig = (topicId: string): TopicConfig => {
       },
     ],
     nextSteps: [
-      { id: "stack", name: "Stack", icon: Layers, path: "/stack" },
-      { id: "queue", name: "Queue", icon: List, path: "/queue" },
+      { id: "stack", name: "Stack", icon: Layers, path: "/topics/stack" },
+      { id: "queue", name: "Queue", icon: List, path: "/topics/queue" },
     ],
   };
 };

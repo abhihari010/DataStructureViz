@@ -1,5 +1,6 @@
 package com.dsavisualizer.entity;
 
+import com.dsavisualizer.dto.MethodSignature;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
@@ -53,6 +54,10 @@ public class PracticeProblem {
 
     @Column(name = "method_name")
     private String methodName;
+
+    @Type(JsonBinaryType.class)
+    @Column(name = "method_signature", columnDefinition = "jsonb")
+    private MethodSignature methodSignature;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -115,6 +120,15 @@ public class PracticeProblem {
 
     public void setMethodName(String methodName) {
         this.methodName = methodName;
+    }
+
+    @JsonProperty("methodSignature")
+    public MethodSignature getMethodSignature() {
+        return methodSignature;
+    }
+
+    public void setMethodSignature(MethodSignature methodSignature) {
+        this.methodSignature = methodSignature;
     }
 
     @JsonProperty("solutions")

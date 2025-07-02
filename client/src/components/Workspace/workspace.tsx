@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { useParams } from 'wouter';
+import { useParams, useLocation } from 'wouter';
 import Split from 'react-split';
 import './split-gutter.css';
 import ProblemDescription, { TestCase, TabType } from './ProblemDescription/problemdescription';
@@ -16,6 +16,7 @@ interface WorkspaceProps {
 
 const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
   const [language, setLanguage] = useState<string>('javascript');
   const [code, setCode] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -27,6 +28,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
   const [submissionMessage, setSubmissionMessage] = useState<string>('');
   const [lastRuntime, setLastRuntime] = useState<number | undefined>(undefined);
   const [lastMemory, setLastMemory] = useState<number | undefined>(undefined);
+  const [activeCase, setActiveCase] = useState(0);
 
   // Helper to get a unique key for localStorage per problem and language
   const getLocalStorageKey = (problemId: number, language: string) => `dsa_code_${problemId}_${language}`;
@@ -284,7 +286,7 @@ public:
             {/* Home Button */}
             <div className="flex items-center px-4 py-2 border-b border-gray-700 bg-gray-800/50">
               <button 
-                onClick={() => window.history.back()}
+                onClick={() => setLocation("/")}
                 className="text-gray-300 hover:text-white flex items-center text-sm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -303,7 +305,7 @@ public:
                 examples={parsedTestCases.slice(0, 2).map((tc, idx) => ({
                   id: idx + 1,
                   input: typeof tc.input === 'string' ? tc.input : JSON.stringify(tc.input),
-                  output: typeof tc.expected === 'string' ? tc.expected : JSON.stringify(tc.expected),
+                  output: typeof tc.expected === 'string' ? tc.expected : JSON.stringify(tc.expected.python),
                   explanation: tc.explanation
                 }))}
                 constraints={problem.constraints ? problem.constraints.map(c => c.constraint) : []}
@@ -347,6 +349,9 @@ public:
             <TestCasesPanel
               testCases={parsedTestCases}
               testResults={testResults}
+              activeCase={activeCase}
+              setActiveCase={setActiveCase}
+              language={language}
             />
           </Split>
         </Split>

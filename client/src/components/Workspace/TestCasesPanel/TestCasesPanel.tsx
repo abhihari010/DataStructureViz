@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TestCase } from '../ProblemDescription/problemdescription';
 
 interface TestCasesPanelProps {
   testCases: TestCase[];
   testResults: Record<number, { passed: boolean; output?: any; error?: string }>;
+  activeCase: number;
+  setActiveCase: (idx: number) => void;
+  language: string;
 }
 
-const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults }) => {
-  const [activeCase, setActiveCase] = useState(0);
-
+const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults, activeCase, setActiveCase, language }) => {
   if (!testCases || testCases.length === 0) {
     return (
       <div className="p-4 bg-[#1e1e1e] text-white h-full">
@@ -30,7 +31,19 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults 
         .join('\n');
     }
     return Array.isArray(input) ? JSON.stringify(input) : JSON.stringify(input, null, 2);
-    };
+  };
+
+  // Helper to get language-specific expected output
+  const getExpectedOutput = (expected: any) => {
+    if (expected && typeof expected === "object" && !Array.isArray(expected)) {
+      // Try to get the value for the current language
+      if (expected[language]) return expected[language];
+      // Fallback: first value
+      const first = Object.values(expected)[0];
+      return first;
+    }
+    return expected;
+  };
 
   const getResultStatus = () => {
     if (!allTestsRun) return null;
@@ -90,7 +103,7 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults 
               <div>
                 <p className="font-semibold">Expected output:</p>
                 <pre className="bg-[#2d2d2d] p-2 rounded mt-1 text-sm overflow-x-auto">
-                  {JSON.stringify(testCases[activeCase].expected, null, 2)}
+                  {JSON.stringify(getExpectedOutput(testCases[activeCase].expected), null, 2)}
                 </pre>
               </div>
               {testResults[activeCase].error && (
@@ -106,7 +119,7 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults 
             <div>
               <p className="font-semibold">Expected Output:</p>
               <pre className="bg-[#2d2d2d] p-2 rounded mt-1 text-sm overflow-x-auto">
-                {JSON.stringify(testCases[activeCase].expected, null, 2)}
+                {JSON.stringify(getExpectedOutput(testCases[activeCase].expected), null, 2)}
               </pre>
             </div>
           )}

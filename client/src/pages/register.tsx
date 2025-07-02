@@ -87,12 +87,17 @@ export default function Register() {
       const result = await response.json();
       console.log("Registration successful:", result);
 
-      // Store the JWT token
-      if (result.token) {
-        localStorage.setItem("jwt_token", result.token);
-      }
+      // Show success message about email verification
+      toast({
+        title: "Registration Successful!",
+        description: result.message || "Please check your email to verify your account before logging in.",
+      });
 
-      setLocation("/");
+      // Redirect to login page instead of landing page
+      // This makes it clear that they need to verify their email before they can log in
+      setTimeout(() => {
+        setLocation("/login");
+      }, 2000);
     } catch (error) {
       console.error("Registration error:", error);
       if (axios.isAxiosError(error) && error.response?.data) {

@@ -1,0 +1,76 @@
+[
+  {
+    "title": "Valid Parentheses",
+    "description": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.\n\nAn input string is valid if:\n1. Open brackets must be closed by the same type of brackets.\n2. Open brackets must be closed in the correct order.\n3. Every close bracket has a corresponding open bracket of the same type.",
+    "difficulty": "easy",
+    "topic": "stack",
+    "methodName": "isValid",
+    "methodSignature": {
+      "parameters": [
+        {
+          "name": "s",
+          "type": "String",
+          "description": "The string containing parentheses"
+        }
+      ],
+      "returnType": "boolean",
+      "description": "Returns true if the string has valid parentheses, false otherwise"
+    },
+    "testCases": [
+      {"input": "()", "inputArgs": ["()"], "output": {"python": "True", "javascript": true, "java": true, "cpp": true}},
+      {"input": "()[]{}", "inputArgs": ["()[]{}"], "output": {"python": "True", "javascript": true, "java": true, "cpp": true}},
+      {"input": "(]", "inputArgs": ["(]"], "output": {"python": "False", "javascript": false, "java": false, "cpp": false}},
+      {"input": "([)]", "inputArgs": ["([)]"], "output": {"python": "False", "javascript": false, "java": false, "cpp": false}},
+      {"input": "{[]}", "inputArgs": ["{[]}"], "output": {"python": "True", "javascript": true, "java": true, "cpp": true}}
+    ],
+    "solutions": {
+      "java": "class Solution {\n    public boolean isValid(String s) {\n        Stack<Character> stack = new Stack<>();\n        for (char c : s.toCharArray()) {\n            if (c == '(' || c == '{' || c == '[') {\n                stack.push(c);\n            } else {\n                if (stack.isEmpty()) return false;\n                char top = stack.pop();\n                if ((c == ')' && top != '(') || \n                    (c == '}' && top != '{') || \n                    (c == ']' && top != '[')) {\n                    return false;\n                }\n            }\n        }\n        return stack.isEmpty();\n    }\n}",
+      "javascript": "class Solution {\n    isValid(s) {\n        const stack = [];\n        const map = { ')': '(', '}': '{', ']': '[' };\n        for (let char of s) {\n            if (!(char in map)) {\n                stack.push(char);\n            } else if (stack.length === 0 || stack.pop() !== map[char]) {\n                return false;\n            }\n        }\n        return stack.length === 0;\n    }\n}",
+      "python": "class Solution:\n    def isValid(self, s: str) -> bool:\n        stack = []\n        mapping = {')': '(', '}': '{', ']': '['}\n        \n        for char in s:\n            if char in mapping:\n                top_element = stack.pop() if stack else '#'\n                if mapping[char] != top_element:\n                    return False\n            else:\n                stack.append(char)\n        return not stack",
+      "cpp": "class Solution {\npublic:\n    bool isValid(string s) {\n        stack<char> st;\n        for (char c : s) {\n            if (c == '(' || c == '{' || c == '[') {\n                st.push(c);\n            } else {\n                if (st.empty()) return false;\n                char top = st.top();\n                st.pop();\n                if ((c == ')' && top != '(') || \n                    (c == '}' && top != '{') || \n                    (c == ']' && top != '[')) {\n                    return false;\n                }\n            }\n        }\n        return st.empty();\n    }\n};"
+    },
+    "boilerPlateCode": {
+      "java": "class Solution {\n    boolean isValid(String s) {\n        // Your code here\n    }\n}",
+      "javascript": "class Solution {\n    isValid(s) {\n        // Your code here\n    }\n}",
+      "python": "class Solution:\n    def isValid(self, s: str) -> bool:\n        # Your code here\n        pass",
+      "cpp": "class Solution {\npublic:\n    bool isValid(string s) {\n        // Your code here\n    }\n};"
+    },
+    "timeComplexity": "O(n)",
+    "spaceComplexity": "O(n)"
+  },
+  {
+    "title": "Car Fleet",
+    "description": "There are n cars going to the same destination along a one-lane road. The destination is target miles away.\n\nYou are given two integer array position and speed, both of length n, where position[i] is the position of the ith car and speed[i] is the speed of the ith car (in miles per hour).\n\nA car can never pass another car ahead of it, but it can catch up to it and drive bumper to bumper at the same speed. The faster car will slow down to match the slower car's speed. The distance between these two cars is ignored (i.e., they are assumed to have the same position).\n\nA car fleet is some non-empty set of cars driving at the same position and same speed. Note that a single car is also a car fleet.\n\nIf a car catches up to a car fleet right at the destination point, it will still be considered as one car fleet.\n\nReturn the number of car fleets that will arrive at the destination.",
+    "difficulty": "medium",
+    "topic": "stack",
+    "methodName": "carFleet",
+    "methodSignature": {
+      "parameters": [
+        { "name": "target", "type": "int", "description": "The destination distance" },
+        { "name": "position", "type": "int[]", "description": "Positions of the cars" },
+        { "name": "speed", "type": "int[]", "description": "Speeds of the cars" }
+      ],
+      "returnType": "int",
+      "description": "Returns the number of car fleets that will arrive at the destination"
+    },
+    "testCases": [
+      { "input": [12, [10,8,0,5,3], [2,4,1,1,3]], "inputArgs": [12, [10,8,0,5,3], [2,4,1,1,3]], "output": { "python": 3, "javascript": 3, "java": 3, "cpp": 3 } },
+      { "input": [10, [3], [3]], "inputArgs": [10, [3], [3]], "output": { "python": 1, "javascript": 1, "java": 1, "cpp": 1 } },
+      { "input": [100, [0,2,4], [4,2,1]], "inputArgs": [100, [0,2,4], [4,2,1]], "output": { "python": 1, "javascript": 1, "java": 1, "cpp": 1 } }
+    ],
+    "solutions": {
+      "java": "class Solution {\n    public int carFleet(int target, int[] position, int[] speed) {\n        int n = position.length;\n        double[][] cars = new double[n][2];\n        for (int i = 0; i < n; ++i) {\n            cars[i][0] = position[i];\n            cars[i][1] = (double)(target - position[i]) / speed[i];\n        }\n        Arrays.sort(cars, (a, b) -> Double.compare(a[0], b[0]));\n        int fleets = 0;\n        double time = 0;\n        for (int i = n - 1; i >= 0; --i) {\n            if (cars[i][1] > time) {\n                time = cars[i][1];\n                fleets++;\n            }\n        }\n        return fleets;\n    }\n}",
+      "javascript": "class Solution {\n    /**\n     * @param {number} target\n     * @param {number[]} position\n     * @param {number[]} speed\n     * @return {number}\n     */\n    carFleet(target, position, speed) {\n        const n = position.length;\n        const cars = position.map((pos, i) => [pos, (target - pos) / speed[i]]);\n        cars.sort((a, b) => a[0] - b[0]);\n        let fleets = 0, time = 0;\n        for (let i = n - 1; i >= 0; --i) {\n            if (cars[i][1] > time) {\n                time = cars[i][1];\n                fleets++;\n            }\n        }\n        return fleets;\n    }\n}",
+      "python": "class Solution:\n    def carFleet(self, target: int, position: list[int], speed: list[int]) -> int:\n        cars = sorted(zip(position, speed))\n        times = [(target - p) / s for p, s in cars]\n        fleets = 0\n        while times:\n            lead = times.pop()\n            fleets += 1\n            while times and times[-1] <= lead:\n                times.pop()\n        return fleets",
+      "cpp": "class Solution {\npublic:\n    int carFleet(int target, vector<int>& position, vector<int>& speed) {\n        int n = position.size();\n        vector<pair<int, double>> cars;\n        for (int i = 0; i < n; ++i) {\n            cars.push_back({position[i], (double)(target - position[i]) / speed[i]});\n        }\n        sort(cars.begin(), cars.end());\n        int fleets = 0;\n        double time = 0;\n        for (int i = n - 1; i >= 0; --i) {\n            if (cars[i].second > time) {\n                time = cars[i].second;\n                fleets++;\n            }\n        }\n        return fleets;\n    }\n};"
+    },
+    "boilerPlateCode": {
+      "java": "class Solution {\n    public int carFleet(int target, int[] position, int[] speed) {\n        // Your code here\n        return 0;\n    }\n}",
+      "javascript": "class Solution {\n    /**\n     * @param {number} target\n     * @param {number[]} position\n     * @param {number[]} speed\n     * @return {number}\n     */\n    carFleet(target, position, speed) {\n        // Your code here\n        return 0;\n    }\n}",
+      "python": "class Solution:\n    def carFleet(self, target: int, position: list[int], speed: list[int]) -> int:\n        # Your code here\n        pass",
+      "cpp": "class Solution {\npublic:\n    int carFleet(int target, vector<int>& position, vector<int>& speed) {\n        // Your code here\n        return 0;\n    }\n};"
+    },
+    "timeComplexity": {"default": "O(n log n)"},
+    "spaceComplexity": {"default": "O(n)"}
+  }
+] 

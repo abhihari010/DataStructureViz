@@ -1,0 +1,85 @@
+[
+  {
+    "title": "Reverse Linked List",
+    "description": "Given the head of a singly linked list, reverse the list, and return the reversed list.",
+    "difficulty": "easy",
+    "topic": "linked-list",
+    "methodName": "reverseList",
+    "methodSignature": {
+      "parameters": [
+        {
+          "name": "head",
+          "type": "ListNode",
+          "description": "The head of the linked list"
+        }
+      ],
+      "returnType": "ListNode",
+      "description": "Returns the head of the reversed linked list"
+    },
+    "testCases": [
+      {"input": [1,2,3,4,5], "inputArgs": [[1,2,3,4,5]], "output": {"python": [5,4,3,2,1], "javascript": [5,4,3,2,1], "java": [5,4,3,2,1], "cpp": [5,4,3,2,1]}},
+      {"input": [1,2], "inputArgs": [[1,2]], "output": {"python": [2,1], "javascript": [2,1], "java": [2,1], "cpp": [2,1]}},
+      {"input": [], "inputArgs": [[]], "output": {"python": [], "javascript": [], "java": [], "cpp": []}},
+      {"input": [1], "inputArgs": [[1]], "output": {"python": [1], "javascript": [1], "java": [1], "cpp": [1]}},
+      {"input": [1,2,3], "inputArgs": [[1,2,3]], "output": {"python": [3,2,1], "javascript": [3,2,1], "java": [3,2,1], "cpp": [3,2,1]}}
+    ],
+    "solutions": {
+      "java": {"code": "class Solution {\n    public ListNode reverseList(ListNode head) {\n        ListNode prev = null, curr = head;\n        while (curr != null) {\n            ListNode next = curr.next;\n            curr.next = prev;\n            prev = curr;\n            curr = next;\n        }\n        return prev;\n    }\n}"},
+      "javascript": {"code": "class Solution {\n    reverseList(head) {\n        let prev = null, curr = head;\n        while (curr) {\n            let next = curr.next;\n            curr.next = prev;\n            prev = curr;\n            curr = next;\n        }\n        return prev;\n    }\n}"},
+      "python": {"code": "class Solution:\n    def reverseList(self, head):\n        prev = None\n        curr = head\n        while curr:\n            next = curr.next\n            curr.next = prev\n            prev = curr\n            curr = next\n        return prev"},
+      "cpp": {"code": "class Solution {\npublic:\n    ListNode* reverseList(ListNode* head) {\n        ListNode* prev = nullptr;\n        while (head) {\n            ListNode* next = head->next;\n            head->next = prev;\n            prev = head;\n            head = next;\n        }\n        return prev;\n    }\n};"}
+    },
+    "boilerPlateCode": {
+      "java": "class Solution {\n    ListNode reverseList(ListNode head) {\n        // Your code here\n    }\n}",
+      "javascript": "class Solution {\n    reverseList(head) {\n        // Your code here\n    }\n}",
+      "python": "class Solution:\n    def reverseList(self, head):\n        # Your code here\n        pass",
+      "cpp": "class Solution {\npublic:\n    ListNode* reverseList(ListNode* head) {\n        // Your code here\n    }\n};"
+    },
+    "timeComplexity": {"default": "O(n)"},
+    "spaceComplexity": {"default": "O(1)"}
+  },
+  {
+    "title": "Remove Nth Node From End of List",
+    "description": "Given the head of a linked list, remove the nth node from the end of the list and return its head.",
+    "difficulty": "medium",
+    "topic": "linked-list",
+    "methodName": "removeNthFromEnd",
+    "methodSignature": {
+      "parameters": [
+        {
+          "name": "head",
+          "type": "ListNode",
+          "description": "The head of the linked list"
+        },
+        {
+          "name": "n",
+          "type": "int",
+          "description": "The position from the end to remove"
+        }
+      ],
+      "returnType": "ListNode",
+      "description": "Returns the head of the modified linked list"
+    },
+    "testCases": [
+      {"input": [1,2,3,4,5], "inputArgs": [[1,2,3,4,5],2], "output": {"python": [1,2,3,5], "javascript": [1,2,3,5], "java": [1,2,3,5], "cpp": [1,2,3,5]}},
+      {"input": [1], "inputArgs": [[1],1], "output": {"python": [], "javascript": [], "java": [], "cpp": []}},
+      {"input": [1,2], "inputArgs": [[1,2],1], "output": {"python": [1], "javascript": [1], "java": [1], "cpp": [1]}},
+      {"input": [1,2,3,4,5], "inputArgs": [[1,2,3,4,5],1], "output": {"python": [1,2,3,4], "javascript": [1,2,3,4], "java": [1,2,3,4], "cpp": [1,2,3,4]}},
+      {"input": [1,2,3,4,5], "inputArgs": [[1,2,3,4,5],5], "output": {"python": [2,3,4,5], "javascript": [2,3,4,5], "java": [2,3,4,5], "cpp": [2,3,4,5]}}
+    ],
+    "solutions": {
+      "java": {"code": "class Solution {\n    public ListNode removeNthFromEnd(ListNode head, int n) {\n        ListNode dummy = new ListNode(0);\n        dummy.next = head;\n        ListNode first = dummy;\n        ListNode second = dummy;\n        \n        for (int i = 0; i <= n; i++) {\n            first = first.next;\n        }\n        \n        while (first != null) {\n            first = first.next;\n            second = second.next;\n        }\n        \n        second.next = second.next.next;\n        return dummy.next;\n    }\n}"},
+      "javascript": {"code": "function removeNthFromEnd(head, n) {\n    let dummy = new ListNode(0);\n    dummy.next = head;\n    let first = dummy;\n    let second = dummy;\n    \n    for (let i = 0; i <= n; i++) {\n        first = first.next;\n    }\n    \n    while (first !== null) {\n        first = first.next;\n        second = second.next;\n    }\n    \n    second.next = second.next.next;\n    return dummy.next;\n}"},
+      "python": {"code": "class Solution:\n    def removeNthFromEnd(self, head, n):\n        dummy = ListNode(0)\n        dummy.next = head\n        first = dummy\n        second = dummy\n        \n        for i in range(n + 1):\n            first = first.next\n        \n        while first:\n            first = first.next\n            second = second.next\n        \n        second.next = second.next.next\n        return dummy.next"},
+      "cpp": {"code": "class Solution {\npublic:\n    ListNode* removeNthFromEnd(ListNode* head, int n) {\n        ListNode* dummy = new ListNode(0);\n        dummy->next = head;\n        ListNode* first = dummy;\n        ListNode* second = dummy;\n        \n        for (int i = 0; i <= n; i++) {\n            first = first->next;\n        }\n        \n        while (first != nullptr) {\n            first = first->next;\n            second = second->next;\n        }\n        \n        second->next = second->next->next;\n        return dummy->next;\n    }\n};"}
+    },
+    "boilerPlateCode": {
+      "java": "class Solution {\n    ListNode removeNthFromEnd(ListNode head, int n) {\n        // Your code here\n    }\n}",
+      "javascript": "class Solution {\n    removeNthFromEnd(head, n) {\n        // Your code here\n    }\n}",
+      "python": "class Solution:\n    def removeNthFromEnd(self, head, n):\n        # Your code here\n        pass",
+      "cpp": "class Solution {\npublic:\n    ListNode* removeNthFromEnd(ListNode* head, int n) {\n        // Your code here\n    }\n};"
+    },
+    "timeComplexity": {"default": "O(n)"},
+    "spaceComplexity": {"default": "O(1)"}
+  }
+] 

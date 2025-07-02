@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Send, Settings, Terminal, X } from 'lucide-react';
+import { Play, Send, Settings, Terminal, X, Loader2 } from 'lucide-react';
 
 type Language = 'javascript' | 'python' | 'java' | 'cpp';
 
@@ -77,6 +77,9 @@ const Playground: React.FC<PlaygroundProps> = ({
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
+            {isRunning && (
+              <Loader2 className="animate-spin inline-block mr-2" size={16} />
+            )}
             Run Test Cases
           </button>
           <button
@@ -88,6 +91,9 @@ const Playground: React.FC<PlaygroundProps> = ({
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
+            {isSubmitting && (
+              <Loader2 className="animate-spin inline-block mr-2" size={16} />
+            )}
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>

@@ -139,6 +139,11 @@ export default function Home() {
                 Continue your DSA journey and track your progress toward
                 mastery.
               </p>
+              <div className="mt-4">
+                <Button asChild size="lg" className="text-lg">
+                  <Link href="/practice">Go to Practice Page</Link>
+                </Button>
+              </div>
             </div>
 
             {/* Stats Overview */}

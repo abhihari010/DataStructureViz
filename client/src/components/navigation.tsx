@@ -49,23 +49,16 @@ export default function Navigation() {
                 Dashboard
               </a>
             </Link>
+            <Link href="/topics">
+              <a className="text-gray-700 hover:text-primary transition-colors">
+                Topics
+              </a>
+            </Link>
             <a
-              href="#"
+              href="/practice"
               className="text-gray-700 hover:text-primary transition-colors"
             >
               Practice
-            </a>
-            <a
-              href="#"
-              className="text-gray-700 hover:text-primary transition-colors"
-            >
-              Progress
-            </a>
-            <a
-              href="#"
-              className="text-gray-700 hover:text-primary transition-colors"
-            >
-              Interview Prep
             </a>
           </div>
         </div>

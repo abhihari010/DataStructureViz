@@ -1,0 +1,35 @@
+[
+  {
+    "title": "Number of Students Unable to Eat Lunch",
+    "description": "The school cafeteria offers lunch to n students. Each student prefers either a circular sandwich (0) or a square sandwich (1). The number of sandwiches in the cafeteria is equal to the number of students. The sandwiches are placed in a stack. At each step:\n- If the student at the front of the queue prefers the sandwich on the top of the stack, they will take it and leave the queue.\n- Otherwise, they will move to the end of the queue.\nThis continues until none of the students at the front of the queue want the sandwich on the top of the stack. Return the number of students that are unable to eat.",
+    "difficulty": "easy",
+    "topic": "queue",
+    "methodName": "countStudents",
+    "methodSignature": {
+      "parameters": [
+        { "name": "students", "type": "int[]", "description": "Array representing each student's preference (0 or 1)" },
+        { "name": "sandwiches", "type": "int[]", "description": "Array representing the stack of sandwiches (0 or 1)" }
+      ],
+      "returnType": "int",
+      "description": "Returns the number of students unable to eat lunch"
+    },
+    "testCases": [
+      { "input": [[1,1,0,0],[0,1,0,1]], "inputArgs": [[1,1,0,0],[0,1,0,1]], "output": { "python": 0, "javascript": 0, "java": 0, "cpp": 0 } },
+      { "input": [[1,1,1,0,0,1],[1,0,0,0,1,1]], "inputArgs": [[1,1,1,0,0,1],[1,0,0,0,1,1]], "output": { "python": 3, "javascript": 3, "java": 3, "cpp": 3 } }
+    ],
+    "solutions": {
+      "java": { "code": "class Solution {\n    public int countStudents(int[] students, int[] sandwiches) {\n        Queue<Integer> queue = new LinkedList<>();\n        for (int s : students) queue.offer(s);\n        int i = 0, n = students.length, count = 0;\n        while (!queue.isEmpty() && count < queue.size()) {\n            if (queue.peek() == sandwiches[i]) {\n                queue.poll();\n                i++;\n                count = 0;\n            } else {\n                queue.offer(queue.poll());\n                count++;\n            }\n        }\n        return queue.size();\n    }\n}" },
+      "javascript": { "code": "class Solution {\n    countStudents(students, sandwiches) {\n        let queue = students.slice();\n        let i = 0, count = 0;\n        while (queue.length && count < queue.length) {\n            if (queue[0] === sandwiches[i]) {\n                queue.shift();\n                i++;\n                count = 0;\n            } else {\n                queue.push(queue.shift());\n                count++;\n            }\n        }\n        return queue.length;\n    }\n}" },
+      "python": { "code": "class Solution:\n    def countStudents(self, students, sandwiches):\n        from collections import deque\n        queue = deque(students)\n        i = 0\n        count = 0\n        while queue and count < len(queue):\n            if queue[0] == sandwiches[i]:\n                queue.popleft()\n                i += 1\n                count = 0\n            else:\n                queue.append(queue.popleft())\n                count += 1\n        return len(queue)" },
+      "cpp": { "code": "class Solution {\npublic:\n    int countStudents(vector<int>& students, vector<int>& sandwiches) {\n        queue<int> q;\n        for (int s : students) q.push(s);\n        int i = 0, n = students.size(), count = 0;\n        while (!q.empty() && count < q.size()) {\n            if (q.front() == sandwiches[i]) {\n                q.pop();\n                i++;\n                count = 0;\n            } else {\n                q.push(q.front());\n                q.pop();\n                count++;\n            }\n        }\n        return q.size();\n    }\n};" }
+    },
+    "boilerPlateCode": {
+      "java": "class Solution {\n    public int countStudents(int[] students, int[] sandwiches) {\n        // Your code here\n        return 0;\n    }\n}",
+      "javascript": "class Solution {\n    countStudents(students, sandwiches) {\n        // Your code here\n        return 0;\n    }\n}",
+      "python": "class Solution:\n    def countStudents(self, students, sandwiches):\n        # Your code here\n        return 0",
+      "cpp": "class Solution {\npublic:\n    int countStudents(vector<int>& students, vector<int>& sandwiches) {\n        // Your code here\n        return 0;\n    }\n};"
+    },
+    "timeComplexity": { "default": "O(n^2)" },
+    "spaceComplexity": { "default": "O(n)" }
+  }
+] 
