@@ -20,9 +20,13 @@ import VerifyOtp from "@/pages/verify-otp";
 import ForgotPassword from "@/pages/forgot-password";
 import Topics from "@/pages/topics";
 import ProblemPage from "@/pages/problems/[pid]";
-import Workspace from "@/components/Workspace/workspace";
 import Graph from "@/pages/graph";
 import Practice from "@/pages/practice";
+import BubbleSort from "@/pages/bubble-sort";
+import QuickSort from "@/pages/quick-sort";
+import DFS from "@/pages/dfs";
+import BFS from "@/pages/bfs";
+import Dijkstra from "@/pages/dijkstra";
 
 function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
@@ -55,13 +59,12 @@ function Router() {
           <Route path="/problems/:pid" component={ProblemPage} />
           <Route path="/topics/graph" component={Graph} />
           <Route path="/practice" component={Practice} />
-          {/*
-          <Route path="/graph" component={Graph} />
           <Route path="/bubble-sort" component={BubbleSort} />
           <Route path="/quick-sort" component={QuickSort} />
-          <Route path="/dfs-bfs" component={DFSBFS} />
+          <Route path="/dfs" component={DFS} />
+          <Route path="/bfs" component={BFS} />
           <Route path="/dijkstra" component={Dijkstra} />
-          */}
+
         </>
       )}
       <Route component={NotFound} />

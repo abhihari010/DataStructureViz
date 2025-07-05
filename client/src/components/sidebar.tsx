@@ -28,7 +28,8 @@ const dataStructures = [
 const algorithms = [
   { id: "bubble-sort", name: "Bubble Sort", icon: ArrowUpDown, path: "/bubble-sort" },
   { id: "quick-sort", name: "Quick Sort", icon: Shuffle, path: "/quick-sort" },
-  { id: "dfs-bfs", name: "DFS/BFS", icon: Route, path: "/dfs-bfs" },
+  { id: "dfs", name: "DFS", icon: Route, path: "/dfs" },
+  { id: "bfs", name: "BFS", icon: Route, path: "/bfs" },
   { id: "dijkstra", name: "Dijkstra's", icon: MapPin, path: "/dijkstra" },
 ];
 

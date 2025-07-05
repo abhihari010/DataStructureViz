@@ -45,6 +45,30 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults,
     return expected;
   };
 
+  function formatOutput(output: any) {
+    // If output is a stringified array, parse and format horizontally
+    if (typeof output === 'string') {
+      try {
+        const parsed = JSON.parse(output);
+        if (Array.isArray(parsed)) {
+          return `[${parsed.join(', ')}]`;
+        }
+      } catch {
+        // Not a JSON array, just strip quotes if present
+        if (output.startsWith('"') && output.endsWith('"')) {
+          return output.slice(1, -1);
+        }
+      }
+      return output;
+    }
+    // If output is already an array
+    if (Array.isArray(output)) {
+      return `[${output.join(', ')}]`;
+    }
+    // Fallback: pretty print
+    return JSON.stringify(output);
+  }
+
   const getResultStatus = () => {
     if (!allTestsRun) return null;
     if (allPassed) {
@@ -97,13 +121,13 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults,
               <div>
                 <p className="font-semibold">Your Output:</p>
                 <pre className="bg-[#2d2d2d] p-2 rounded mt-1 text-sm overflow-x-auto">
-                  {JSON.stringify(testResults[activeCase].output, null, 2)}
+                  {formatOutput(testResults[activeCase].output)}
                 </pre>
               </div>
               <div>
                 <p className="font-semibold">Expected output:</p>
                 <pre className="bg-[#2d2d2d] p-2 rounded mt-1 text-sm overflow-x-auto">
-                  {JSON.stringify(getExpectedOutput(testCases[activeCase].expected), null, 2)}
+                  {formatOutput(getExpectedOutput(testCases[activeCase].expected))}
                 </pre>
               </div>
               {testResults[activeCase].error && (
@@ -119,7 +143,7 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults,
             <div>
               <p className="font-semibold">Expected Output:</p>
               <pre className="bg-[#2d2d2d] p-2 rounded mt-1 text-sm overflow-x-auto">
-                {JSON.stringify(getExpectedOutput(testCases[activeCase].expected), null, 2)}
+                {formatOutput(getExpectedOutput(testCases[activeCase].expected))}
               </pre>
             </div>
           )}

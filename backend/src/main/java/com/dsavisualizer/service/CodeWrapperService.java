@@ -76,6 +76,15 @@ public class CodeWrapperService {
                   System.out.println(result);
         """, methodName);
 
+        } else if (sig.getParameters().size() == 1 &&
+                "ListNode".equals(sig.getParameters().get(0).getType())) {
+            body = String.format("""
+                  // single-ListNode shortcut
+                  ListNode head = toList(raw);
+                  %s result = new Solution().%s(head);
+                  System.out.println(listToString(result));
+        """, sig.getReturnType(), methodName);
+
         } else {
             // general multi-param splitter + parser + call
             StringBuilder paramParsers = new StringBuilder();
@@ -101,6 +110,7 @@ public class CodeWrapperService {
             for (int i = 0; i < sig.getParameters().size(); i++) {
                 var p = sig.getParameters().get(i);
                 String name = p.getName(), type = p.getType();
+                paramParsers.append(String.format("                  System.err.println(\"DEBUG: inputArgs.get(%d) = \" + inputArgs.get(%d));\n", i, i));
                 switch (type) {
                     case "int":
                         paramParsers.append(
@@ -165,8 +175,15 @@ public class CodeWrapperService {
                 }
             }
 
-            if (sig.getReturnType().contains("TreeNode") || sig.getReturnType().contains("ListNode")) {
+            if (sig.getReturnType().contains("TreeNode")) {
                 body = paramParsers.toString() + String.format("                  %s result = new Solution().%s(%s);\n                  System.out.println(result.val);\n",
+                    sig.getReturnType(), methodName,
+                    sig.getParameters().stream()
+                            .map(MethodSignature.Parameter::getName)
+                            .collect(Collectors.joining(", "))
+                );
+            } else if (sig.getReturnType().contains("ListNode")) {
+                body = paramParsers.toString() + String.format("                  %s result = new Solution().%s(%s);\n                  System.out.println(listToString(result));\n",
                     sig.getReturnType(), methodName,
                     sig.getParameters().stream()
                             .map(MethodSignature.Parameter::getName)
@@ -192,10 +209,12 @@ public class CodeWrapperService {
         // helpers below
 %s
 %s
+%s
 } // end of Main class
 """,
             needsList    ? generateJavaListParserHelper() : "",
-            needsTree    ? generateJavaTreeParserHelper() : ""
+            needsTree    ? generateJavaTreeParserHelper() : "",
+            needsList    ? generateJavaListSerializer() : ""
         );
 
         // Now, append user code (Solution class) after Main
@@ -445,6 +464,24 @@ public class CodeWrapperService {
             } else {
                 sb.append("        cout << res << endl;\n");
             }
+            sb.append("        return 0;\n");
+            sb.append("    } catch (exception &e) {\n");
+            sb.append("        return 1;\n");
+            sb.append("    }\n");
+            sb.append("}\n");
+            return sb.toString();
+        } else if (sig.getParameters().size() == 1 && sig.getParameters().get(0).getType().contains("ListNode")) {
+            // Single ListNode input: do not split, just parse raw
+            sb.append("        string s = raw;\n");
+            sb.append("        if(s.size()>=2 && s.front()=='[' && s.back()==']') s = s.substr(1, s.size()-2);\n");
+            sb.append("        vector<int> arr;\n");
+            sb.append("        if(!s.empty()) { stringstream ss(s); string item; while(getline(ss, item, ',')) if(!item.empty()) arr.push_back(stoi(item)); }\n");
+            sb.append("        ListNode* head = arrayToList(arr);\n");
+            sb.append(String.format("        Solution sol; auto res = sol.%s(head);\n", methodName));
+            sb.append("        vector<int> out = listToArray(res);\n");
+            sb.append("        cout << '[';");
+            sb.append(" for (size_t i = 0; i < out.size(); ++i) { cout << out[i]; if (i+1 < out.size()) cout << ','; }");
+            sb.append(" cout << ']' << endl;\n");
             sb.append("        return 0;\n");
             sb.append("    } catch (exception &e) {\n");
             sb.append("        return 1;\n");

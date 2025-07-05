@@ -78,8 +78,7 @@ export default function SettingsPage() {
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { firstName: string; lastName: string; email: string }) => {
       const response = await auth.getCurrentUser();
-      // In a real app, you would call an API endpoint to update the user's profile
-      // For now, we'll just update the local cache
+
       return { ...response.data, ...data };
     },
     onSuccess: (updatedUser: User) => {
@@ -289,9 +288,7 @@ export default function SettingsPage() {
                   </AvatarFallback>
                 )}
               </Avatar>
-              <Button variant="outline" size="sm" disabled={!isEditing}>
-                Change Photo
-              </Button>
+
             </div>
             
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">

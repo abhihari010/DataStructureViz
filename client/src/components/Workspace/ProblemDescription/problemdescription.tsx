@@ -281,7 +281,20 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       {isTreeProblem && firstExampleInput && (
         <div className="mb-6">
           <div className="font-semibold mb-1">Tree Visualization (Example 1):</div>
-          <TreeSVG tree={arrayToTree(JSON.parse(firstExampleInput))} />
+          {(() => {
+            let treeInput;
+            try {
+              const parsed = JSON.parse(firstExampleInput);
+              if (Array.isArray(parsed) && Array.isArray(parsed[0])) {
+                treeInput = parsed[0];
+              } else {
+                treeInput = parsed;
+              }
+            } catch {
+              treeInput = [];
+            }
+            return <TreeSVG tree={arrayToTree(treeInput)} />;
+          })()}
         </div>
       )}
 

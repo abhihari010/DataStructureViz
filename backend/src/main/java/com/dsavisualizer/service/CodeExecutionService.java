@@ -4,12 +4,16 @@ import com.dsavisualizer.dto.*;
 import com.dsavisualizer.entity.PracticeProblem;
 import com.dsavisualizer.repository.PracticeProblemRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 public class CodeExecutionService {
+
+    private static final Logger log = LoggerFactory.getLogger(CodeExecutionService.class);
 
     private final Judge0Service judge0Service;
     private final PracticeProblemRepository problemRepository;
@@ -83,8 +87,17 @@ public class CodeExecutionService {
                 Object inField      = tc.get("input");
                 Object inArgsField  = tc.get("inputArgs");
                 String stdin;
-                if (inArgsField != null && (lang.equals("python") || lang.equals("javascript"))) {
-                    stdin = objectMapper.writeValueAsString(inArgsField);
+                if (inArgsField != null) {
+                    // Special handling for C++ single-parameter problems
+                    if (lang.equals("cpp") || lang.equals("c++")) {
+                        if (problem.getMethodSignature() != null && problem.getMethodSignature().getParameters().size() == 1 && inArgsField instanceof java.util.List inArgsList && inArgsList.size() == 1) {
+                            stdin = objectMapper.writeValueAsString(inArgsList.get(0));
+                        } else {
+                            stdin = objectMapper.writeValueAsString(inArgsField);
+                        }
+                    } else {
+                        stdin = objectMapper.writeValueAsString(inArgsField);
+                    }
                 } else {
                     stdin = (inField instanceof String)
                             ? (String) inField
@@ -146,6 +159,13 @@ public class CodeExecutionService {
                         : "";
                 String stderr = (jr.stderr() != null ? jr.stderr().trim() : "");
                 String compileOutput = (jr.compile_output() != null ? jr.compile_output().trim() : "");
+                // Log stderr and compile output for debugging
+                if (!stderr.isEmpty()) {
+                    log.warn("Judge0 stderr (test case {}): {}", i + 1, stderr);
+                }
+                if (!compileOutput.isEmpty()) {
+                    log.warn("Judge0 compile_output (test case {}): {}", i + 1, compileOutput);
+                }
                 String errorMsg = "";
                 if (!stderr.isEmpty() && !compileOutput.isEmpty()) {
                     errorMsg = stderr + "\n" + compileOutput;
@@ -158,7 +178,7 @@ public class CodeExecutionService {
                 // Fallback: If all outputs are empty, set a generic error message
                 boolean passedCase;
                 if ((actual.isEmpty()) && (errorMsg.isEmpty())) {
-                    errorMsg = "No output or error.";
+                    errorMsg = "Code did not compile.";
                     passedCase = false;
                 } else {
                     // f) Determine pass/fail
@@ -169,8 +189,16 @@ public class CodeExecutionService {
                         passedCase = jr.status() != null && jr.status().id() == 3
                                 && actualNorm.equals(expectNorm);
                     } else {
-                        passedCase = jr.status() != null && jr.status().id() == 3
-                                && actual.equals(expect);
+                        boolean areEqual;
+                        try {
+                            Object actualObj = objectMapper.readValue(actual, Object.class);
+                            Object expectObj = objectMapper.readValue(expect, Object.class);
+                            areEqual = Objects.equals(actualObj, expectObj);
+                        } catch (Exception e) {
+                            // Fallback to string comparison if not valid JSON
+                            areEqual = actual.equals(expect);
+                        }
+                        passedCase = jr.status() != null && jr.status().id() == 3 && areEqual;
                     }
                 }
 

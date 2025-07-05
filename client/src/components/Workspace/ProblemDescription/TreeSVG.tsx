@@ -1,5 +1,10 @@
 import React from 'react';
 
+function getTreeDepth(node: any): number {
+  if (!node) return 0;
+  return 1 + Math.max(getTreeDepth(node.left), getTreeDepth(node.right));
+}
+
 function renderTree(node: any, x: number, y: number, dx: number, level = 0): React.ReactNode {
   if (!node) return null;
   const children = [] as React.ReactNode[];
@@ -25,8 +30,10 @@ function renderTree(node: any, x: number, y: number, dx: number, level = 0): Rea
 }
 
 export default function TreeSVG({ tree }: { tree: any }) {
+  const depth = getTreeDepth(tree);
+  const height = 60 * depth + 60;
   return (
-    <svg width={300} height={180} style={{ display: 'block', margin: '0 auto' }}>
+    <svg width={300} height={height} style={{ display: 'block', margin: '0 auto' }}>
       {renderTree(tree, 150, 30, 60)}
     </svg>
   );
