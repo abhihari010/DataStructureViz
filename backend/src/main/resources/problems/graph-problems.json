@@ -1,0 +1,85 @@
+[
+  {
+    "title": "Number of Islands",
+    "description": "Given an m x n 2D binary grid which represents a map of '1's (land) and '0's (water), return the number of islands. An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.",
+    "difficulty": "medium",
+    "topic": "graph",
+    "methodName": "numIslands",
+    "methodSignature": {
+      "parameters": [
+        {
+          "name": "grid",
+          "type": "char[][]",
+          "description": "2D grid representing the map with '1' for land and '0' for water"
+        }
+      ],
+      "returnType": "int",
+      "description": "Returns the number of islands in the grid"
+    },
+    "testCases": [
+      {"input": [["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]], "inputArgs": [[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]], "output": {"python": 1, "javascript": 1, "java": 1, "cpp": 1}},
+      {"input": [["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]], "inputArgs": [[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]], "output": {"python": 3, "javascript": 3, "java": 3, "cpp": 3}},
+      {"input": [["1","1","1"],["0","1","0"],["1","1","1"]], "inputArgs": [[["1","1","1"],["0","1","0"],["1","1","1"]]], "output": {"python": 1, "javascript": 1, "java": 1, "cpp": 1}},
+      {"input": [["0","0","0","0","0"],["0","0","0","0","0"],["0","0","0","0","0"]], "inputArgs": [[["0","0","0","0","0"],["0","0","0","0","0"],["0","0","0","0","0"]]], "output": {"python": 0, "javascript": 0, "java": 0, "cpp": 0}},
+      {"input": [["1","0","1","0","1"],["0","1","0","1","0"],["1","0","1","0","1"]], "inputArgs": [[["1","0","1","0","1"],["0","1","0","1","0"],["1","0","1","0","1"]]], "output": {"python": 8, "javascript": 8, "java": 8, "cpp": 8}}
+    ],
+    "solutions": {
+      "java": {"code": "class Solution {\n    public int numIslands(char[][] grid) {\n        if (grid == null || grid.length == 0) {\n            return 0;\n        }\n        \n        int numIslands = 0;\n        for (int i = 0; i < grid.length; i++) {\n            for (int j = 0; j < grid[0].length; j++) {\n                if (grid[i][j] == '1') {\n                    numIslands++;\n                    dfs(grid, i, j);\n                }\n            }\n        }\n        return numIslands;\n    }\n    \n    private void dfs(char[][] grid, int i, int j) {\n        if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] == '0') {\n            return;\n        }\n        \n        grid[i][j] = '0';\n        dfs(grid, i + 1, j);\n        dfs(grid, i - 1, j);\n        dfs(grid, i, j + 1);\n        dfs(grid, i, j - 1);\n    }\n}"},
+      "javascript": {"code": "class Solution {\n    numIslands(grid) {\n        if (!grid || grid.length === 0) {\n            return 0;\n        }\n        \n        let numIslands = 0;\n        for (let i = 0; i < grid.length; i++) {\n            for (let j = 0; j < grid[0].length; j++) {\n                if (grid[i][j] === '1') {\n                    numIslands++;\n                    this.dfs(grid, i, j);\n                }\n            }\n        }\n        return numIslands;\n    }\n    \n    dfs(grid, i, j) {\n        if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] === '0') {\n            return;\n        }\n        \n        grid[i][j] = '0';\n        this.dfs(grid, i + 1, j);\n        this.dfs(grid, i - 1, j);\n        this.dfs(grid, i, j + 1);\n        this.dfs(grid, i, j - 1);\n    }\n}"},
+      "python": {"code": "class Solution:\n    def numIslands(self, grid):\n        if not grid:\n            return 0\n        \n        def dfs(i, j):\n            if i < 0 or i >= len(grid) or j < 0 or j >= len(grid[0]) or grid[i][j] == '0':\n                return\n            \n            grid[i][j] = '0'\n            dfs(i + 1, j)\n            dfs(i - 1, j)\n            dfs(i, j + 1)\n            dfs(i, j - 1)\n        \n        numIslands = 0\n        for i in range(len(grid)):\n            for j in range(len(grid[0])):\n                if grid[i][j] == '1':\n                    numIslands += 1\n                    dfs(i, j)\n        \n        return numIslands"},
+      "cpp": {"code": "class Solution {\npublic:\n    int numIslands(vector<vector<char>>& grid) {\n        if (grid.empty() || grid[0].empty()) {\n            return 0;\n        }\n        \n        int numIslands = 0;\n        for (int i = 0; i < grid.size(); i++) {\n            for (int j = 0; j < grid[0].size(); j++) {\n                if (grid[i][j] == '1') {\n                    numIslands++;\n                    dfs(grid, i, j);\n                }\n            }\n        }\n        return numIslands;\n    }\n    \nprivate:\n    void dfs(vector<vector<char>>& grid, int i, int j) {\n        if (i < 0 || i >= grid.size() || j < 0 || j >= grid[0].size() || grid[i][j] == '0') {\n            return;\n        }\n        \n        grid[i][j] = '0';\n        dfs(grid, i + 1, j);\n        dfs(grid, i - 1, j);\n        dfs(grid, i, j + 1);\n        dfs(grid, i, j - 1);\n    }\n};"}
+    },
+    "boilerPlateCode": {
+      "java": "class Solution {\n    public int numIslands(char[][] grid) {\n        // Your code here\n        return 0;\n    }\n}",
+      "javascript": "class Solution {\n    numIslands(grid) {\n        // Your code here\n        return 0;\n    }\n}",
+      "python": "class Solution:\n    def numIslands(self, grid):\n        # Your code here\n        pass",
+      "cpp": "class Solution {\npublic:\n    int numIslands(vector<vector<char>>& grid) {\n        // Your code here\n        return 0;\n    }\n};"
+    },
+    "timeComplexity": {"default": "O(m*n)"},
+    "spaceComplexity": {"default": "O(m*n)"}
+  },
+  {
+    "title": "Course Schedule",
+    "description": "There are a total of numCourses courses you have to take, labeled from 0 to numCourses - 1. You are given an array prerequisites where prerequisites[i] = [a, b] indicates that you must take course b first if you want to take course a. Return true if you can finish all courses. Otherwise, return false.",
+    "difficulty": "medium",
+    "topic": "graph",
+    "methodName": "canFinish",
+    "methodSignature": {
+      "parameters": [
+        {
+          "name": "numCourses",
+          "type": "int",
+          "description": "Total number of courses"
+        },
+        {
+          "name": "prerequisites",
+          "type": "int[][]",
+          "description": "Array of prerequisite pairs [course, prerequisite]"
+        }
+      ],
+      "returnType": "boolean",
+      "description": "Returns true if all courses can be finished, false otherwise"
+    },
+    "testCases": [
+      {"input": [2, [[1,0]]], "inputArgs": [2, [[1,0]]], "output": {"python": true, "javascript": true, "java": true, "cpp": true}},
+      {"input": [2, [[1,0],[0,1]]], "inputArgs": [2, [[1,0],[0,1]]], "output": {"python": false, "javascript": false, "java": false, "cpp": false}},
+      {"input": [4, [[1,0],[2,0],[3,1],[3,2]]], "inputArgs": [4, [[1,0],[2,0],[3,1],[3,2]]], "output": {"python": true, "javascript": true, "java": true, "cpp": true}},
+      {"input": [3, [[1,0],[2,1],[0,2]]], "inputArgs": [3, [[1,0],[2,1],[0,2]]], "output": {"python": false, "javascript": false, "java": false, "cpp": false}},
+      {"input": [1, []], "inputArgs": [1, []], "output": {"python": true, "javascript": true, "java": true, "cpp": true}}
+    ],
+    "solutions": {
+      "java": {"code": "class Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        List<List<Integer>> graph = new ArrayList<>();\n        for (int i = 0; i < numCourses; i++) {\n            graph.add(new ArrayList<>());\n        }\n        \n        int[] inDegree = new int[numCourses];\n        for (int[] prerequisite : prerequisites) {\n            graph.get(prerequisite[1]).add(prerequisite[0]);\n            inDegree[prerequisite[0]]++;\n        }\n        \n        Queue<Integer> queue = new LinkedList<>();\n        for (int i = 0; i < numCourses; i++) {\n            if (inDegree[i] == 0) {\n                queue.offer(i);\n            }\n        }\n        \n        int count = 0;\n        while (!queue.isEmpty()) {\n            int course = queue.poll();\n            count++;\n            \n            for (int neighbor : graph.get(course)) {\n                inDegree[neighbor]--;\n                if (inDegree[neighbor] == 0) {\n                    queue.offer(neighbor);\n                }\n            }\n        }\n        \n        return count == numCourses;\n    }\n}"},
+      "javascript": {"code": "class Solution {\n    canFinish(numCourses, prerequisites) {\n        const graph = Array.from({length: numCourses}, () => []);\n        const inDegree = new Array(numCourses).fill(0);\n        \n        for (const [course, prerequisite] of prerequisites) {\n            graph[prerequisite].push(course);\n            inDegree[course]++;\n        }\n        \n        const queue = [];\n        for (let i = 0; i < numCourses; i++) {\n            if (inDegree[i] === 0) {\n                queue.push(i);\n            }\n        }\n        \n        let count = 0;\n        while (queue.length > 0) {\n            const course = queue.shift();\n            count++;\n            \n            for (const neighbor of graph[course]) {\n                inDegree[neighbor]--;\n                if (inDegree[neighbor] === 0) {\n                    queue.push(neighbor);\n                }\n            }\n        }\n        \n        return count === numCourses;\n    }\n}"},
+      "python": {"code": "from collections import defaultdict, deque\n\nclass Solution:\n    def canFinish(self, numCourses, prerequisites):\n        graph = defaultdict(list)\n        inDegree = [0] * numCourses\n        \n        for course, prerequisite in prerequisites:\n            graph[prerequisite].append(course)\n            inDegree[course] += 1\n        \n        queue = deque()\n        for i in range(numCourses):\n            if inDegree[i] == 0:\n                queue.append(i)\n        \n        count = 0\n        while queue:\n            course = queue.popleft()\n            count += 1\n            \n            for neighbor in graph[course]:\n                inDegree[neighbor] -= 1\n                if inDegree[neighbor] == 0:\n                    queue.append(neighbor)\n        \n        return count == numCourses"},
+      "cpp": {"code": "class Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> graph(numCourses);\n        vector<int> inDegree(numCourses, 0);\n        \n        for (const auto& prerequisite : prerequisites) {\n            graph[prerequisite[1]].push_back(prerequisite[0]);\n            inDegree[prerequisite[0]]++;\n        }\n        \n        queue<int> q;\n        for (int i = 0; i < numCourses; i++) {\n            if (inDegree[i] == 0) {\n                q.push(i);\n            }\n        }\n        \n        int count = 0;\n        while (!q.empty()) {\n            int course = q.front();\n            q.pop();\n            count++;\n            \n            for (int neighbor : graph[course]) {\n                inDegree[neighbor]--;\n                if (inDegree[neighbor] == 0) {\n                    q.push(neighbor);\n                }\n            }\n        }\n        \n        return count == numCourses;\n    }\n};"}
+    },
+    "boilerPlateCode": {
+      "java": "import java.util.*;\n\nclass Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        // Your code here\n        return false;\n    }\n}",
+      "javascript": "class Solution {\n    canFinish(numCourses, prerequisites) {\n        // Your code here\n        return false;\n    }\n}",
+      "python": "class Solution:\n    def canFinish(self, numCourses, prerequisites):\n        # Your code here\n        pass",
+      "cpp": "#include <vector>\n\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        // Your code here\n        return false;\n    }\n};"
+    },
+    "timeComplexity": {"default": "O(V + E)"},
+    "spaceComplexity": {"default": "O(V + E)"}
+  }
+] 

@@ -3,7 +3,7 @@ import { ThumbsUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import SolutionPanel from '@/components/SolutionPanel/solution-panel';
-import { Solution } from '@/services/problemService';
+import { Solution, MethodSignature } from '@/services/problemService';
 import ReactMarkdown from 'react-markdown';
 import TreeSVG from './TreeSVG';
 import { arrayToTree } from '@/lib/utils';
@@ -59,8 +59,28 @@ interface ProblemDescriptionProps {
     spaceComplexity?: {
       [key: string]: string;
     };
+    methodSignature?: MethodSignature;
   };
   problemId?: number; // Add problemId prop
+}
+
+// Utility to pretty-print 2D arrays
+function prettyPrint2DArray(arr: any[][]) {
+  return (
+    <pre style={{ margin: 0 }}>
+      {`[
+` +
+        arr
+          .map(
+            (row) =>
+              '  [' +
+              row.map((el) => (typeof el === 'string' ? `"${el}"` : el)).join(', ') +
+              ']'
+          )
+          .join(',\n') +
+        `\n]`}
+    </pre>
+  );
 }
 
 /**
@@ -271,6 +291,31 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   const isTreeProblem = topics.includes('binary-tree') || title.toLowerCase().includes('tree');
   const firstExampleInput = examples[0]?.input;
 
+  const renderExampleInput = (input: string, parameters?: MethodSignature['parameters']) => {
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(input);
+    } catch {
+      return <span>{input}</span>;
+    }
+    if (parameters && Array.isArray(parsed)) {
+      return (
+        <div>
+          {parameters.map((param, idx) => (
+            <div key={param.name || idx} style={{ marginBottom: 4 }}>
+              <span style={{ color: '#a5b4fc' }}>{param.name}</span>
+              <span style={{ color: '#6ee7b7', marginLeft: 4 }}>({param.type})</span>
+              <span style={{ marginLeft: 8 }}>= </span>
+              <span>{JSON.stringify(parsed[idx])}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    // fallback: old behavior
+    return <span>{input}</span>;
+  };
+
   const renderProblemContent = () => (
     <div className="p-4">
       <div className="prose prose-invert max-w-none">
@@ -301,22 +346,25 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       
       {examples && examples.length > 0 && (
         <div className="mt-6">
-          {[...examples].slice(0, 2).map((example, idx) => (
-            <div key={idx} className="mb-6">
-              <div className="font-semibold mb-1">Example {idx + 1}:</div>
-              <pre className="bg-gray-900 rounded p-3 text-sm mb-1">
-                <span className="font-bold">Input:</span> {example.input}
-                      </pre>
-              <pre className="bg-gray-900 rounded p-3 text-sm">
-                <span className="font-bold">Output:</span> {example.output}
-                      </pre>
-                    {example.explanation && (
-                <div className="bg-gray-900 rounded p-3 text-sm mt-1">
-                  <span className="font-bold">Explanation:</span> {example.explanation}
+          {[...examples].slice(0, 2).map((example, idx) => {
+            return (
+              <div key={idx} className="mb-6">
+                <div className="font-semibold mb-1">Example {idx + 1}:</div>
+                <div className="bg-gray-900 rounded p-3 text-sm mb-1">
+                  <span className="font-bold">Input:</span>{' '}
+                  {renderExampleInput(example.input, problem?.methodSignature?.parameters)}
+                </div>
+                <pre className="bg-gray-900 rounded p-3 text-sm">
+                  <span className="font-bold">Output:</span> {example.output}
+                </pre>
+                {example.explanation && (
+                  <div className="bg-gray-900 rounded p-3 text-sm mt-1">
+                    <span className="font-bold">Explanation:</span> {example.explanation}
                   </div>
                 )}
               </div>
-            ))}
+            );
+          })}
         </div>
       )}
       

@@ -91,7 +91,14 @@ public class CodeExecutionService {
                     // Special handling for C++ single-parameter problems
                     if (lang.equals("cpp") || lang.equals("c++")) {
                         if (problem.getMethodSignature() != null && problem.getMethodSignature().getParameters().size() == 1 && inArgsField instanceof java.util.List inArgsList && inArgsList.size() == 1) {
-                            stdin = objectMapper.writeValueAsString(inArgsList.get(0));
+                            String paramType = problem.getMethodSignature().getParameters().get(0).getType();
+                            if (paramType.endsWith("[][]") || paramType.startsWith("vector<vector<") || paramType.startsWith("List<List<")) {
+                                // 2D array: serialize the whole array
+                                stdin = objectMapper.writeValueAsString(inArgsField);
+                            } else {
+                                // Scalar or 1D: serialize just the first element
+                                stdin = objectMapper.writeValueAsString(inArgsList.get(0));
+                            }
                         } else {
                             stdin = objectMapper.writeValueAsString(inArgsField);
                         }

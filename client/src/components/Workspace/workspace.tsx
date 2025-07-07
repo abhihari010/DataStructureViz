@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useParams, useLocation } from 'wouter';
 import Split from 'react-split';
 import './split-gutter.css';
@@ -29,6 +29,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
   const [lastRuntime, setLastRuntime] = useState<number | undefined>(undefined);
   const [lastMemory, setLastMemory] = useState<number | undefined>(undefined);
   const [activeCase, setActiveCase] = useState(0);
+  const playgroundRef = useRef<any>(null);
 
   // Helper to get a unique key for localStorage per problem and language
   const getLocalStorageKey = (problemId: number, language: string) => `dsa_code_${problemId}_${language}`;
@@ -280,7 +281,7 @@ public:
   return (
     <div className="flex flex-col h-screen bg-[#1e1e1e]">
       <div className="flex-1 flex overflow-hidden">
-        <Split className="split flex-1" sizes={[40,60]} direction="horizontal" gutterSize={6}>
+        <Split className="split flex-1" sizes={[40,60]} direction="horizontal" gutterSize={6} minSize={[200, 200]}>
           {/* Left pane: problem text and solutions */}
           <div className="flex flex-col h-full overflow-hidden">
             {/* Home Button */}
@@ -304,27 +305,31 @@ public:
                 problemStatement={problem.description}
                 examples={parsedTestCases.slice(0, 2).map((tc, idx) => ({
                   id: idx + 1,
-                  input: typeof tc.input === 'string' ? tc.input : JSON.stringify(tc.input),
-                  output: typeof tc.expected === 'string' ? tc.expected : JSON.stringify(tc.expected.python),
-                  explanation: tc.explanation
+                  input: JSON.stringify(tc.input),
+                  output: typeof tc.expected === 'object'
+                    ? (tc.expected[language] ?? tc.expected['python'] ?? Object.values(tc.expected)[0])
+                    : String(tc.expected),
+                  explanation: tc.explanation,
                 }))}
-                constraints={problem.constraints ? problem.constraints.map(c => c.constraint) : []}
+                constraints={Array.isArray(problem.constraints) && typeof problem.constraints[0] === 'object' ? problem.constraints.map((c: any) => c.constraint) : (problem.constraints || [])}
                 topics={problem.topic ? [problem.topic] : []}
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
                 showTabs={true}
-                problem={{
-                  solutions: problem.solutions,
-                  timeComplexity: problem.timeComplexity,
-                  spaceComplexity: problem.spaceComplexity
-                }}
+                problem={problem}
                 problemId={problem.id}
               />
             </div>
           </div>
 
           {/* Right pane: editor + test cases */}
-          <Split className="split flex flex-col" sizes={[60,40]} direction="vertical" gutterSize={6}>
+          <Split className="split flex flex-col" sizes={[60,40]} direction="vertical" gutterSize={6} minSize={[200, 200]}
+            onDragEnd={() => {
+              if (playgroundRef.current && playgroundRef.current.layout) {
+                playgroundRef.current.layout();
+              }
+            }}
+          >
             {/* Submission Message */}
             {submissionMessage && (
               <div className={`px-4 py-2 text-sm font-medium ${
@@ -336,6 +341,7 @@ public:
               </div>
             )}
             <Playground
+              ref={playgroundRef}
               code={code}
               language={language}
               isRunning={isRunning}
@@ -352,6 +358,7 @@ public:
               activeCase={activeCase}
               setActiveCase={setActiveCase}
               language={language}
+              parameters={problem.methodSignature?.parameters}
             />
           </Split>
         </Split>

@@ -20,6 +20,16 @@ export interface Solution {
   spaceComplexity: string;
 }
 
+export interface MethodSignature {
+  parameters: Array<{
+    name: string;
+    type: string;
+    description?: string;
+  }>;
+  returnType: string;
+  description?: string;
+}
+
 export interface PracticeProblem {
   id: number;
   title: string;
@@ -43,6 +53,7 @@ export interface PracticeProblem {
   constraints?: Constraint[];
   // For backward compatibility
   solution?: string;
+  methodSignature?: MethodSignature;
 }
 
 export const getProblemById = async (id: number): Promise<PracticeProblem> => {

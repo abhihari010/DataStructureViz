@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { Play, Send, Settings, Terminal, X, Loader2 } from 'lucide-react';
 
@@ -23,7 +23,7 @@ interface PlaygroundProps {
   isSubmitting?: boolean;
 }
 
-const Playground: React.FC<PlaygroundProps> = ({
+const Playground = forwardRef<any, PlaygroundProps>(({
   code,
   language,
   onCodeChange,
@@ -33,16 +33,21 @@ const Playground: React.FC<PlaygroundProps> = ({
   onSubmit,
   canSubmit = true,
   isSubmitting = false,
-}) => {
+}, ref) => {
   const [activeTab, setActiveTab] = useState<'code'>('code');
   const editorRef = useRef<any>(null);
 
+  useImperativeHandle(ref, () => ({
+    layout: () => {
+      if (editorRef.current) editorRef.current.layout();
+    },
+    getEditor: () => editorRef.current
+  }), []);
+
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor;
-    // Focus the editor
     editor.focus();
   };
-
 
   const handleRunTests = async () => {
     if (isRunning) return;
@@ -62,7 +67,6 @@ const Playground: React.FC<PlaygroundProps> = ({
     onLanguageChange(language);
   };
 
-  
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] text-white">
       {/* Toolbar */}
@@ -136,7 +140,7 @@ const Playground: React.FC<PlaygroundProps> = ({
       />
     </div>
   );
-};
+});
 
 export { Playground };
 export type { PlaygroundProps };

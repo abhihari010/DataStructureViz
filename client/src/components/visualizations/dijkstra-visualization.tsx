@@ -366,23 +366,25 @@ export default function DijkstraVisualization() {
         </div>
         {/* Controls */}
         <div className="border-t border-gray-200 px-6 py-4 mt-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col space-y-3">
             <div className="flex items-center space-x-4">
               <Button onClick={step} disabled={isPlaying || heap.length === 0}> <StepForward className="w-4 h-4 mr-1" /> Step </Button>
               <Button onClick={play} disabled={isPlaying || heap.length === 0}> <Play className="w-4 h-4 mr-1" /> Play </Button>
               <Button onClick={pause} disabled={!isPlaying}> <Pause className="w-4 h-4 mr-1" /> Pause </Button>
-              <Button onClick={reset} variant="outline"> <RotateCcw className="w-4 h-4 mr-1" /> Reset </Button>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Speed:</span>
-              <input
-                type="range"
-                min={1}
-                max={10}
-                value={animationSpeed[0]}
-                onChange={e => setAnimationSpeed([parseInt(e.target.value)])}
-                className="w-20"
-              />
+            <div className="flex items-center justify-between">
+              <Button onClick={reset} variant="outline"> <RotateCcw className="w-4 h-4 mr-1" /> Reset </Button>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Speed:</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  value={animationSpeed[0]}
+                  onChange={e => setAnimationSpeed([parseInt(e.target.value)])}
+                  className="w-20"
+                />
+              </div>
             </div>
           </div>
         </div>

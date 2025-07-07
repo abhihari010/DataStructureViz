@@ -1,5 +1,6 @@
 import React from 'react';
 import { TestCase } from '../ProblemDescription/problemdescription';
+import { MethodSignature } from '@/services/problemService';
 
 interface TestCasesPanelProps {
   testCases: TestCase[];
@@ -7,9 +8,10 @@ interface TestCasesPanelProps {
   activeCase: number;
   setActiveCase: (idx: number) => void;
   language: string;
+  parameters?: MethodSignature['parameters'];
 }
 
-const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults, activeCase, setActiveCase, language }) => {
+const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults, activeCase, setActiveCase, language, parameters }) => {
   if (!testCases || testCases.length === 0) {
     return (
       <div className="p-4 bg-[#1e1e1e] text-white h-full">
@@ -25,6 +27,18 @@ const TestCasesPanel: React.FC<TestCasesPanelProps> = ({ testCases, testResults,
   const allPassed = totalCases > 0 && passedCases === totalCases;
 
   const renderInput = (input: TestCase['input']) => {
+    // If we have parameter metadata and input is an array, display each param separately
+    if (parameters && Array.isArray(input)) {
+      return parameters.map((param, idx) => (
+        <div key={param.name || idx} style={{ marginBottom: 4 }}>
+          <span style={{ color: '#a5b4fc' }}>{param.name}</span>
+          <span style={{ color: '#6ee7b7', marginLeft: 4 }}>({param.type})</span>
+          <span style={{ marginLeft: 8 }}>= </span>
+          <span>{JSON.stringify(input[idx])}</span>
+        </div>
+      ));
+    }
+    // fallback: old behavior
     if (typeof input === 'object' && input !== null && !Array.isArray(input)) {
       return Object.entries(input)
         .map(([key, value]) => `${key} = ${JSON.stringify(value)}`)

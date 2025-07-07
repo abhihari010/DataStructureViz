@@ -31,7 +31,8 @@ public class PracticeProblemDataInitializer {
                 "problems/queue-problems.json",
                 "problems/binary-tree-problems.json",
                 "problems/linked-list-problems.json",
-                "problems/array-problems.json"
+                "problems/array-problems.json",
+                "problems/graph-problems.json"
             };
             for (String file : files) {
                 InputStream is = new ClassPathResource(file).getInputStream();

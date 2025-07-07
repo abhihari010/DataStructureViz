@@ -87,3 +87,34 @@
     var(--gutter-active-color) 6px
   );
 }
+
+/* Make the gutter more visible and easier to grab */
+.split .gutter {
+  background: #666;
+  opacity: 0.9;
+  transition: background 0.2s, opacity 0.2s;
+  z-index: 10;
+}
+
+.split .gutter:hover {
+  background: #00b4d8;
+  opacity: 1;
+}
+
+/* Vertical gutter (between top and bottom) */
+.split .gutter.gutter-vertical {
+  height: 12px;
+  min-height: 12px;
+  cursor: row-resize;
+  border-radius: 6px;
+  margin: 0 -2px;
+}
+
+/* Horizontal gutter (between left and right) */
+.split .gutter.gutter-horizontal {
+  width: 12px;
+  min-width: 12px;
+  cursor: col-resize;
+  border-radius: 6px;
+  margin: -2px 0;
+}
