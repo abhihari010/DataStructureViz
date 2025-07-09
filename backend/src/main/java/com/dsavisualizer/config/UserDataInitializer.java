@@ -16,17 +16,5 @@ public class UserDataInitializer {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void initializeUsers() {
-        // Check if default admin exists, if not, create it
-        if (!userRepository.existsByEmail("admin@dsa.com")) {
-            User admin = new User();
-            admin.setId(UUID.randomUUID().toString());
-            admin.setEmail("admin@dsa.com");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setFirstName("Admin");
-            admin.setLastName("User");
-            admin.setEmailVerified(true);
-            userRepository.save(admin);
-        }
-    }
-} 
+
+}
