@@ -1,8 +1,9 @@
+/// <reference types="vite/client" />
 import axios from "axios";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://backend-fragrant-dream-2713.fly.dev/api",
   headers: {
     "Content-Type": "application/json",
   },
