@@ -47,9 +47,6 @@ export default function Landing() {
             <Button size="lg" className="text-lg px-8 py-4" asChild>
               <Link href="/login">Start Learning Free</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-4">
-              View Demo
-            </Button>
           </div>
         </div>
       </section>
