@@ -14,18 +14,18 @@ function getRandomArray(length = 7) {
   return Array.from({ length }, () => Math.floor(Math.random() * 99) + 1);
 }
 
-function clone(arr) {
-  return arr.map(x => x);
+function clone(arr: any[]) {
+  return arr.map((x: any) => x);
 }
 
 // Helper to generate quick sort steps
-function getQuickSortSteps(array) {
-  const steps = [];
+function getQuickSortSteps(array: any[]) {
+  const steps: any[] = [];
   const arr = clone(array);
   const n = arr.length;
   const sorted = Array(n).fill(false);
 
-  function quickSort(l, r) {
+  function quickSort(l: number, r: number) {
     if (l >= r) {
       if (l === r) sorted[l] = true;
       return;
@@ -127,7 +127,7 @@ export default function QuickSortVisualization() {
           <div className="flex flex-col w-full items-center">
             <div className="flex items-center space-x-4 overflow-x-auto py-4 px-16 w-full justify-center">
               <AnimatePresence>
-                {current.arr.map((value, idx) => {
+                {current.arr.map((value: any, idx: number) => {
                   let highlight = baseColor;
                   if (idx === current.pivot) highlight = pivotColor;
                   else if (idx === current.j || idx === current.i) highlight = compareColor;
@@ -150,7 +150,7 @@ export default function QuickSortVisualization() {
             {/* Arrows under compared elements */}
             {current.pivot !== -1 && (
               <div className="flex items-center space-x-4 px-16 w-full justify-center mt-2" style={{ minHeight: 24 }}>
-                {current.arr.map((_, idx) => (
+                {current.arr.map((_: any, idx: number) => (
                   <div key={idx} className="w-16 flex items-center justify-center">
                     {idx === current.pivot ? (
                       <span style={{ fontSize: 24, color: '#ef4444' }}>↑</span>
