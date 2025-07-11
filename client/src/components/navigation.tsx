@@ -54,12 +54,11 @@ export default function Navigation() {
                 Topics
               </a>
             </Link>
-            <a
-              href="/practice"
-              className="text-gray-700 hover:text-primary transition-colors"
-            >
-              Practice
-            </a>
+            <Link href="/practice">
+              <a className="text-gray-700 hover:text-primary transition-colors">
+                Practice
+              </a>
+            </Link>
           </div>
         </div>
 
