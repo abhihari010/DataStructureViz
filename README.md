@@ -1,5 +1,9 @@
 # DSA Visualizer
 
+[Live Demo](https://data-structure-viz-git-main-abhihari010s-projects.vercel.app)
+
+*Note: The site may take some time to load due to free hosting.*
+
 **Master Data Structures & Algorithms through Interactive Visualization and Hands-on Practice**
 
 ---
