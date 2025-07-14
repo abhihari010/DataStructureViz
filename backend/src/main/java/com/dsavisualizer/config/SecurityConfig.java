@@ -4,7 +4,6 @@ import com.dsavisualizer.security.JwtAuthenticationFilter;
 import com.dsavisualizer.security.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -52,30 +51,28 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http,
-                                           JwtAuthenticationFilter jwtAuthFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-          .csrf(csrf -> csrf.disable())
-          .authorizeHttpRequests(auth -> auth
-              // 1) let preflights through
-              .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-              // 2) permit your auth endpoints (use the full “/api” path!)
-              .requestMatchers("/api/auth/register", "/api/auth/login",
-                               "/api/auth/verify", "/api/auth/resend-verification")
-                 .permitAll()
-              // 3) your other public endpoints
-              .requestMatchers("/problems/**", "/execute").permitAll()
-              // 4) everything else needs login
-              .anyRequest().authenticated()
-          )
-          .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-          .authenticationProvider(authenticationProvider())
-          .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-    
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/auth/register").permitAll()
+                    .requestMatchers("/auth/login").permitAll()
+                    .requestMatchers("/auth/verify").permitAll()
+                    .requestMatchers("/auth/resend-verification").permitAll()
+                    .requestMatchers("/forgot-password/**").permitAll()
+                .requestMatchers("/problems/**").permitAll() // Allow public access to problems
+                .requestMatchers("/execute").permitAll()     // Allow public access to code execution
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-    
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
