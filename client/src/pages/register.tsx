@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import axios from "axios";
+import { auth } from "@/lib/api";
 
 const registerSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -64,33 +65,12 @@ export default function Register() {
       console.log("Sending to backend:", JSON.stringify(registrationData));
 
       // Make the registration request
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(registrationData),
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Registration failed";
-        const errorText = await response.text();
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          errorMessage = errorText || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-      console.log("Registration successful:", result);
+      await auth.register(registrationData);
 
       // Show success message about email verification
       toast({
         title: "Registration Successful!",
-        description: result.message || "Please check your email to verify your account before logging in.",
+        description: "Please check your email to verify your account before logging in.",
       });
 
       // Redirect to login page instead of landing page
