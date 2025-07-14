@@ -1,6 +1,6 @@
 # DSA Visualizer
 
-[Live Demo](https://data-structure-viz-git-main-abhihari010s-projects.vercel.app)
+[Live Demo](https://data-structure-viz.vercel.app/)
 
 *Note: The site may take some time to load due to free hosting.*
 
