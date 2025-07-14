@@ -46,8 +46,9 @@ export default function VerifyOtp() {
     setIsLoading(true);
     setError(null);
 
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
     try {
-      await axios.post(`/api/forgot-password/verifyOtp/${otp}/${email}`);
+      await axios.post(`${apiBase}/forgot-password/verifyOtp/${otp}/${email}`);
       
       // Navigate to reset password page with email as URL parameter
       setLocation(`/reset-password?email=${encodeURIComponent(email)}`);
@@ -68,8 +69,9 @@ export default function VerifyOtp() {
   const handleResendOtp = async () => {
     if (resendTime > 0) return;
 
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
     try {
-      await axios.post(`/api/forgot-password/sendMail/${email}`);
+      await axios.post(`${apiBase}/forgot-password/sendMail/${email}`);
       setResendTime(60);
       toast({
         title: "OTP Resent",

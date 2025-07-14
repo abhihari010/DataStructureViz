@@ -80,9 +80,13 @@ export default function Login() {
 
   const handleResendVerification = async () => {
     try {
-      const response = await fetch(`/api/auth/resend-verification?email=${encodeURIComponent(userEmail)}`, {
-        method: "POST",
-      });
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const response = await fetch(
+        `${apiBase}/auth/resend-verification?email=${encodeURIComponent(userEmail)}`,
+        {
+          method: "POST",
+        }
+      );
       const data = await response.json();
 
       if (!response.ok) {

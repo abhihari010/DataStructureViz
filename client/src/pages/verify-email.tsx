@@ -32,7 +32,8 @@ export default function VerifyEmail() {
   const verifyEmail = async (token: string) => {
     setIsVerifying(true);
     try {
-      const response = await fetch(`/api/auth/verify?token=${token}`);
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const response = await fetch(`${apiBase}/auth/verify?token=${token}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -72,9 +73,13 @@ export default function VerifyEmail() {
 
     setIsResending(true);
     try {
-      const response = await fetch(`/api/auth/resend-verification?email=${encodeURIComponent(email)}`, {
-        method: "POST",
-      });
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const response = await fetch(
+        `${apiBase}/auth/resend-verification?email=${encodeURIComponent(email)}`,
+        {
+          method: "POST",
+        }
+      );
       const data = await response.json();
 
       if (!response.ok) {

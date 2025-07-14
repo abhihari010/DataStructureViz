@@ -123,7 +123,8 @@ export const executeCode = async (request: ExecuteCodeRequest): Promise<ExecuteC
 };
 
 export async function submitSolutionApi({ code, language, problemId }: { code: string, language: string, problemId: number }) {
-  return fetch('/api/submit', {
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+  return fetch(`${apiBase}/submit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code, language, problemId }),

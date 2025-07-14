@@ -32,9 +32,10 @@ export default function ForgotPassword() {
     setIsLoading(true);
     
     try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
       // Make a POST request with proper headers
       await axios.post(
-        `/api/forgot-password/sendMail/${encodeURIComponent(data.email)}`,
+        `${apiBase}/forgot-password/sendMail/${encodeURIComponent(data.email)}`,
         {},
         {
           headers: {
