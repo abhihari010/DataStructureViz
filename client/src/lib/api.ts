@@ -6,8 +6,7 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "https://backend-fragrant-dream-2713.fly.dev/api",
   headers: {
     "Content-Type": "application/json",
-  },
-  withCredentials: true // Important for sending cookies with CORS
+  }
 });
 
 // Request interceptor to add auth token
