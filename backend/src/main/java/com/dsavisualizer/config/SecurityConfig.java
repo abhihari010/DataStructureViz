@@ -80,7 +80,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
             "http://localhost:5173",
             "https://data-structure-viz.vercel.app",
-            "https://data-structure-7c6zi2mmo-abhihari010s-projects.vercel.app"
+            "https://data-structure-1ut3hpkrm-abhihari010s-projects.vercel.app"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
