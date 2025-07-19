@@ -63,9 +63,11 @@ export const auth = {
   register: (data: RegisterRequest) => api.post("/auth/register", data),
   login: (data: LoginRequest) => api.post("/auth/login", data),
   logout: () => api.post("/auth/logout"),
+  
   getCurrentUser: () => api.get("/auth/user"),
   changePassword: (data: ChangePasswordRequest) =>
     api.post("/auth/change-password", data),
+  deleteAccount: () => api.post("/auth/delete-account"),
 };
 
 // Types

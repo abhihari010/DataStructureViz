@@ -9,8 +9,19 @@ import { useForm } from "react-hook-form";
 import { User, auth } from "@/lib/api";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Loader2, Pencil, Save, User as UserIcon, Mail, Lock, Check } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Save, User as UserIcon, Mail, Lock, Check, Trash2 } from "lucide-react";
 import { Link } from "wouter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type ProfileFormData = {
   firstName: string;
@@ -121,6 +132,25 @@ export default function SettingsPage() {
     },
   });
 
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const response = await auth.deleteAccount();
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Account deleted successfully');
+      // Clear all local data and redirect to landing page
+      localStorage.removeItem('jwt_token');
+      queryClient.clear();
+      window.location.href = '/';
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Failed to delete account. Please try again.';
+      toast.error(errorMessage);
+      console.error('Account deletion error:', error);
+    },
+  });
+
   const onSubmitProfile = (data: ProfileFormData) => {
     updateProfileMutation.mutate({
       firstName: data.firstName,
@@ -203,6 +233,7 @@ export default function SettingsPage() {
       logout();
     }
   };
+  
 
   const getInitials = (name: string) => {
     return name
@@ -519,9 +550,42 @@ export default function SettingsPage() {
                 <h4 className="font-medium text-red-800">Delete Account</h4>
                 <p className="text-sm text-red-600">Permanently delete your account and all data</p>
               </div>
-              <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
-                Delete Account
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deleteAccountMutation.isPending}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => deleteAccountMutation.mutate()}
+                      disabled={deleteAccountMutation.isPending}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {deleteAccountMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Account
+                        </>
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </CardContent>
