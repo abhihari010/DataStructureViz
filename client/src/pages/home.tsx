@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { useQuery } from "@tanstack/react-query";
 import Navigation from "@/components/navigation";
 import Sidebar from "@/components/sidebar";
@@ -46,7 +46,7 @@ const TOTAL_ESTIMATED_TIME = TOPICS.reduce((sum, topic) => sum + topic.time, 0);
 
 export default function Home() {
   type User = { firstName?: string } | null;
-  const { user } = useAuth() as { user: User };
+  const { user } = useAuthJWT();
 
   const { data: progress = [], isLoading: progressLoading } = useQuery<UserProgress[]>({
     queryKey: ["/api/progress"],

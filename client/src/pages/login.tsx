@@ -10,6 +10,7 @@ import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Mail } from "lucide-react";
 import { ChartGantt } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type LoginFormData = {
   email: string;
@@ -18,7 +19,7 @@ type LoginFormData = {
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login } = useAuthJWT();
+  const { login, isLoading, isAuthTransitioning } = useAuthJWT();
   const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isEmailNotVerified, setIsEmailNotVerified] = useState(false);
@@ -105,6 +106,14 @@ export default function Login() {
       });
     }
   };
+
+  if (isLoading || isAuthTransitioning) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
