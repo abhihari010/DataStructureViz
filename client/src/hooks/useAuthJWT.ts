@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { auth, type User, type LoginRequest, type RegisterRequest } from "@/lib/api";
+import {
+  auth,
+  type User,
+  type LoginRequest,
+  type RegisterRequest,
+} from "@/lib/api";
 import { AxiosResponse } from "axios";
 import { useLocation } from "wouter";
 
@@ -16,7 +21,9 @@ interface AuthResponse {
 export function useAuthJWT() {
   const [isAuthTransitioning, setIsAuthTransitioning] = useState(false);
   const [location, setLocation] = useLocation();
-  const [token, setToken] = useState<string | null>(localStorage.getItem('jwt_token'));
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("jwt_token")
+  );
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useQuery<User>({
@@ -27,6 +34,8 @@ export function useAuthJWT() {
     },
     enabled: !!token,
     retry: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const loginMutation = useMutation<AuthResponse, Error, LoginRequest>({
@@ -36,7 +45,9 @@ export function useAuthJWT() {
         return response.data;
       } catch (error: any) {
         // Re-throw the error with the response data
-        const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+        const errorMessage =
+          error.response?.data?.message ||
+          "Login failed. Please check your credentials.";
         const errorWithResponse = new Error(errorMessage);
         (errorWithResponse as any).response = error.response;
         throw errorWithResponse;
@@ -46,7 +57,7 @@ export function useAuthJWT() {
       setIsAuthTransitioning(true);
     },
     onSuccess: (data) => {
-      localStorage.setItem('jwt_token', data.token);
+      localStorage.setItem("jwt_token", data.token);
       setToken(data.token);
       // Optimistically set the user in the React Query cache
       queryClient.setQueryData(["/api/auth/user"], {
@@ -56,16 +67,16 @@ export function useAuthJWT() {
         lastName: data.lastName,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
+
       // Check for return URL in session storage
-      const returnUrl = sessionStorage.getItem('returnUrl');
+      const returnUrl = sessionStorage.getItem("returnUrl");
       if (returnUrl) {
-        sessionStorage.removeItem('returnUrl');
+        sessionStorage.removeItem("returnUrl");
         window.location.href = returnUrl; // Use window.location for full page reload
       } else {
-        setLocation('/');
+        setLocation("/");
       }
-      
+
       setTimeout(() => setIsAuthTransitioning(false), 600);
     },
     onError: (error) => {
@@ -77,11 +88,38 @@ export function useAuthJWT() {
   // Create a wrapper function that returns a promise
   const login = async (credentials: LoginRequest) => {
     try {
+      setIsAuthTransitioning(true);
       const result = await loginMutation.mutateAsync(credentials);
+
+      // Set token first
+      localStorage.setItem("jwt_token", result.token);
+      setToken(result.token);
+
+      // Update user data in cache
+      queryClient.setQueryData(["/api/auth/user"], {
+        id: result.id,
+        email: result.email,
+        firstName: result.firstName,
+        lastName: result.lastName,
+      });
+
+      // Force a refetch to ensure we have fresh data
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
+      // Handle navigation
+      const returnUrl = sessionStorage.getItem("returnUrl");
+      if (returnUrl) {
+        sessionStorage.removeItem("returnUrl");
+        window.location.href = returnUrl;
+      } else {
+        setLocation("/");
+      }
+
       return result;
     } catch (error) {
-      // Re-throw the error to be caught by the component
       throw error;
+    } finally {
+      setIsAuthTransitioning(false);
     }
   };
 
@@ -91,17 +129,17 @@ export function useAuthJWT() {
       return response.data;
     },
     onSuccess: (data) => {
-      localStorage.setItem('jwt_token', data.token);
+      localStorage.setItem("jwt_token", data.token);
       setToken(data.token);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
   });
 
   const logout = () => {
-    localStorage.removeItem('jwt_token');
+    localStorage.removeItem("jwt_token");
     setToken(null);
     queryClient.clear();
-    window.location.href = '/'; // Redirect to landing page after logout
+    window.location.href = "/"; // Redirect to landing page after logout
   };
 
   return {

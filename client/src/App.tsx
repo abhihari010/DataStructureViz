@@ -32,7 +32,11 @@ function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
 
   if (isLoading || isAuthTransitioning) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-lg">Loading...</div>
+      </div>
+    );
   }
 
   return (
@@ -64,7 +68,6 @@ function Router() {
           <Route path="/dfs" component={DFS} />
           <Route path="/bfs" component={BFS} />
           <Route path="/dijkstra" component={Dijkstra} />
-
         </>
       )}
       <Route component={NotFound} />
