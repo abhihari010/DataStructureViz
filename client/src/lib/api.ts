@@ -3,20 +3,30 @@ import axios from "axios";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "https://backend-fragrant-dream-2713.fly.dev/api",
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://backend-fragrant-dream-2713.fly.dev/api",
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true // Important for sending cookies with CORS
+  withCredentials: true, // Important for sending cookies with CORS
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("jwt_token");
-    if (token) {
+    const url = config.url || "";
+
+    // Exclude Authorization header for specific endpoints
+    const excludeAuthEndpoints = ["/auth/register", "/auth/login"];
+    if (
+      token &&
+      !excludeAuthEndpoints.some((endpoint) => url.includes(endpoint))
+    ) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -31,22 +41,22 @@ api.interceptors.response.use(
     }
 
     const { status } = error.response;
-    const url = error.config.url || '';
+    const url = error.config.url || "";
 
     if (status === 401 || status === 403) {
       // These are endpoints where a 401/403 is an expected failure message for a form,
       // not an indicator of an invalid session.
-      const isFormSubmissionEndpoint = 
-        url.includes('/auth/login') || 
-        url.includes('/auth/register') || 
-        url.includes('/auth/change-password');
+      const isFormSubmissionEndpoint =
+        url.includes("/auth/login") ||
+        url.includes("/auth/register") ||
+        url.includes("/auth/change-password");
 
       if (!isFormSubmissionEndpoint) {
         // For all other 401/403 errors (including on /auth/user), the token is invalid/expired.
         localStorage.removeItem("jwt_token");
         const returnUrl = window.location.pathname + window.location.search;
-        if (returnUrl !== '/login') {
-          sessionStorage.setItem('returnUrl', returnUrl);
+        if (returnUrl !== "/login") {
+          sessionStorage.setItem("returnUrl", returnUrl);
         }
         window.location.href = "/login";
         return Promise.reject({ ...error, isAuthError: true });
@@ -63,7 +73,7 @@ export const auth = {
   register: (data: RegisterRequest) => api.post("/auth/register", data),
   login: (data: LoginRequest) => api.post("/auth/login", data),
   logout: () => api.post("/auth/logout"),
-  
+
   getCurrentUser: () => api.get("/auth/user"),
   changePassword: (data: ChangePasswordRequest) =>
     api.post("/auth/change-password", data),

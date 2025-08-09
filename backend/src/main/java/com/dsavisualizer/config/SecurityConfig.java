@@ -4,6 +4,7 @@ import com.dsavisualizer.security.JwtAuthenticationFilter;
 import com.dsavisualizer.security.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -51,25 +52,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/register").permitAll()
-                    .requestMatchers("/auth/login").permitAll()
-                    .requestMatchers("/auth/verify").permitAll()
-                    .requestMatchers("/auth/resend-verification").permitAll()
-                    .requestMatchers("/forgot-password/**").permitAll()
-                .requestMatchers("/problems/**").permitAll() // Allow public access to problems
-                .requestMatchers("/execute").permitAll()     // Allow public access to code execution
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify",
+                                "/api/auth/resend-verification", "/api/forgot-password/**",
+                                "/api/problems/**", "/api/execute")
+                        .permitAll()
+
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/verify",
+                                "/auth/resend-verification", "/forgot-password/**",
+                                "/problems/**", "/execute")
+                        .permitAll()
+
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -78,16 +83,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://data-structure-viz.vercel.app",
-            "https://data-structure-1ut3hpkrm-abhihari010s-projects.vercel.app",
-            "https://data-structure-70ina8vy3-abhihari010s-projects.vercel.app"
+                "http://localhost:5173",
+                "https://data-structure-viz.vercel.app",
+                "https://data-structure-1ut3hpkrm-abhihari010s-projects.vercel.app",
+                "https://data-structure-70ina8vy3-abhihari010s-projects.vercel.app"
 
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
