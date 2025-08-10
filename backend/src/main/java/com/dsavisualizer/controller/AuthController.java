@@ -21,6 +21,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
+
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -29,9 +30,9 @@ public class AuthController {
     private final VerificationTokenService verificationTokenService;
 
     public AuthController(AuthenticationManager authenticationManager,
-                         JwtUtil jwtUtil,
-                         UserService userService,
-                         VerificationTokenService verificationTokenService) {
+            JwtUtil jwtUtil,
+            UserService userService,
+            VerificationTokenService verificationTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
@@ -39,23 +40,23 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @CrossOrigin(origins = "https://data-structure-viz.vercel.app")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = userService.createUser(registerRequest);
         verificationTokenService.createVerificationToken(user);
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "Registration successful! Please check your email to verify your account.");
         return ResponseEntity.ok(response);
     }
 
+    @CrossOrigin(origins = "https://data-structure-viz.vercel.app")
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                loginRequest.getEmail(),
-                loginRequest.getPassword()
-            )
-        );
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()));
 
         User user = (User) authentication.getPrincipal();
         if (!user.isEmailVerified()) {
@@ -65,7 +66,7 @@ public class AuthController {
         }
 
         String jwt = jwtUtil.generateToken(user);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("token", jwt);
         response.put("type", "Bearer");
@@ -73,7 +74,7 @@ public class AuthController {
         response.put("email", user.getEmail());
         response.put("firstName", user.getFirstName());
         response.put("lastName", user.getLastName());
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -81,7 +82,7 @@ public class AuthController {
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         boolean verified = verificationTokenService.verifyEmail(token);
         Map<String, String> response = new HashMap<>();
-        
+
         if (verified) {
             response.put("message", "Email verified successfully! You can now log in.");
             return ResponseEntity.ok(response);
@@ -94,7 +95,7 @@ public class AuthController {
     @PostMapping("/resend-verification")
     public ResponseEntity<?> resendVerificationEmail(@RequestParam String email) {
         Optional<User> userOpt = userService.findByEmail(email);
-            
+
         if (userOpt.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "User not found.");
@@ -109,7 +110,7 @@ public class AuthController {
         }
 
         verificationTokenService.createVerificationToken(user);
-        
+
         Map<String, String> response = new HashMap<>();
         response.put("message", "Verification email sent successfully!");
         return ResponseEntity.ok(response);
@@ -140,7 +141,7 @@ public class AuthController {
     public ResponseEntity<?> changePassword(
             @Valid @RequestBody ChangePasswordRequest changePasswordRequest,
             Authentication authentication) {
-        
+
         if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
         }
@@ -149,14 +150,13 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
         try {
             userService.changePassword(
-                user,
-                changePasswordRequest.getCurrentPassword(),
-                changePasswordRequest.getNewPassword()
-            );
-            
+                    user,
+                    changePasswordRequest.getCurrentPassword(),
+                    changePasswordRequest.getNewPassword());
+
             response.put("message", "Password updated successfully");
             return ResponseEntity.ok(response);
-            
+
         } catch (IllegalArgumentException e) {
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
@@ -174,7 +174,7 @@ public class AuthController {
 
         User user = (User) authentication.getPrincipal();
         Map<String, String> response = new HashMap<>();
-        
+
         try {
             userService.deleteAccount(user);
             response.put("message", "Account deleted successfully");
