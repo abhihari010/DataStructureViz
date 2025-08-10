@@ -40,7 +40,6 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @CrossOrigin(origins = "https://data-structure-viz.vercel.app")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = userService.createUser(registerRequest);
         verificationTokenService.createVerificationToken(user);
@@ -50,7 +49,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @CrossOrigin(origins = "https://data-structure-viz.vercel.app")
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
