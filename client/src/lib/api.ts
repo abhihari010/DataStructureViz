@@ -3,7 +3,9 @@ import axios from "axios";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: process.env.VITE_API_BASE_URL,
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://datastructurevizbackend.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
   },
