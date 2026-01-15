@@ -19,16 +19,21 @@ import * as z from "zod";
 import axios from "axios";
 import { auth } from "@/lib/api";
 
-const registerSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -62,15 +67,14 @@ export default function Register() {
         password: data.password,
       };
 
-      console.log("Sending to backend:", JSON.stringify(registrationData));
-
       // Make the registration request
       await auth.register(registrationData);
 
       // Show success message about email verification
       toast({
         title: "Registration Successful!",
-        description: "Please check your email to verify your account before logging in.",
+        description:
+          "Please check your email to verify your account before logging in.",
       });
 
       // Redirect to login page instead of landing page
@@ -85,15 +89,19 @@ export default function Register() {
         toast({
           variant: "destructive",
           title: "Registration Error",
-          description: typeof errorMessage === 'object'
-            ? Object.values(errorMessage).join(', ')
-            : errorMessage,
+          description:
+            typeof errorMessage === "object"
+              ? Object.values(errorMessage).join(", ")
+              : errorMessage,
         });
       } else {
         toast({
           variant: "destructive",
           title: "Registration Error",
-          description: error instanceof Error ? error.message : "Could not create your account. Please try again.",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Could not create your account. Please try again.",
         });
       }
     } finally {
