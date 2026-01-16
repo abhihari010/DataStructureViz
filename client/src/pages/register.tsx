@@ -56,7 +56,6 @@ export default function Register() {
 
   async function onSubmit(data: RegisterFormData) {
     setIsLoading(true);
-    console.log("Form data:", data);
 
     try {
       // Create the registration request object
