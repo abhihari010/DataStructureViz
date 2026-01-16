@@ -51,10 +51,10 @@ export default function Login() {
       
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
-        // Check if this is an email verification error
-        if (errorMessage.includes("verify your email")) {
+        // Check if this is an email verification error using the needsVerification flag
+        if (error.response.data.needsVerification === "true") {
           setIsEmailNotVerified(true);
-          setUserEmail(data.email);
+          setUserEmail(error.response.data.email || data.email);
         }
       } else if (error?.message) {
         errorMessage = error.message;
@@ -82,9 +82,13 @@ export default function Login() {
     try {
       const apiBase = import.meta.env.VITE_API_BASE_URL || "";
       const response = await fetch(
-        `${apiBase}/auth/resend-verification?email=${encodeURIComponent(userEmail)}`,
+        `${apiBase}/auth/resend-verification`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: userEmail }),
         }
       );
       const data = await response.json();

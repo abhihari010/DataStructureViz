@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -51,29 +52,33 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()));
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()));
 
-        User user = (User) authentication.getPrincipal();
-        if (!user.isEmailVerified()) {
+            User user = (User) authentication.getPrincipal();
+            String jwt = jwtUtil.generateToken(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwt);
+            response.put("type", "Bearer");
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("firstName", user.getFirstName());
+            response.put("lastName", user.getLastName());
+
+            return ResponseEntity.ok(response);
+        } catch (DisabledException e) {
+            // User account is disabled (email not verified)
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Please verify your email before logging in.");
+            response.put("message",
+                    "Your email address has not been verified. Please check your inbox for the verification link.");
+            response.put("needsVerification", "true");
+            response.put("email", loginRequest.getEmail());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
-
-        String jwt = jwtUtil.generateToken(user);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", jwt);
-        response.put("type", "Bearer");
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("firstName", user.getFirstName());
-        response.put("lastName", user.getLastName());
-
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/verify")
@@ -91,9 +96,10 @@ public class AuthController {
     }
 
     @PostMapping("/resend-verification")
-    public ResponseEntity<?> resendVerificationEmail(@RequestParam String email) {
-        Optional<User> userOpt = userService.findByEmail(email);
+    public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
 
+        Optional<User> userOpt = userService.findByEmail(email);
         if (userOpt.isEmpty()) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "User not found.");
@@ -104,13 +110,14 @@ public class AuthController {
         if (user.isEmailVerified()) {
             Map<String, String> response = new HashMap<>();
             response.put("message", "Email is already verified.");
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.ok(response);
         }
 
+        // Create new verification token and send email
         verificationTokenService.createVerificationToken(user);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Verification email sent successfully!");
+        response.put("message", "Verification email has been resent. Please check your inbox.");
         return ResponseEntity.ok(response);
     }
 

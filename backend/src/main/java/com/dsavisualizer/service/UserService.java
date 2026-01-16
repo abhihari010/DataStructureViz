@@ -29,12 +29,12 @@ public class UserService implements UserDetailsService {
     private final VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, 
-                      PasswordEncoder passwordEncoder,
-                      UserProgressRepository userProgressRepository,
-                      UserSolutionRepository userSolutionRepository,
-                      ForgotPasswordRepository forgotPasswordRepository,
-                      VerificationTokenRepository verificationTokenRepository) {
+    public UserService(UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            UserProgressRepository userProgressRepository,
+            UserSolutionRepository userSolutionRepository,
+            ForgotPasswordRepository forgotPasswordRepository,
+            VerificationTokenRepository verificationTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userProgressRepository = userProgressRepository;
@@ -73,14 +73,14 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void changePassword(User user, String currentPassword, String newPassword) {
-        
+
         // Verify current password
         boolean passwordMatches = passwordEncoder.matches(currentPassword, user.getPassword());
 
         if (!passwordMatches) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
-        
+
         // Update to new password
         String encodedNewPassword = passwordEncoder.encode(newPassword);
 
@@ -95,20 +95,20 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void deleteAccount(User user) {
         String userId = user.getId();
-        
+
         // Delete all related data for the user
         // Delete user progress
         userProgressRepository.deleteByUserId(userId);
-        
+
         // Delete user solutions
         userSolutionRepository.deleteByUserId(userId);
-        
+
         // Delete forgot password records
         forgotPasswordRepository.deleteByUser(user);
-        
+
         // Delete verification tokens
         verificationTokenRepository.deleteByUser(user);
-        
+
         // Finally delete the user
         userRepository.deleteById(userId);
     }
