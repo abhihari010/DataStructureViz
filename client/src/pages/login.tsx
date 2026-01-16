@@ -16,6 +16,7 @@ import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Mail } from "lucide-react";
 import { ChartGantt } from "lucide-react";
+import api from "@/lib/api";
 
 type LoginFormData = {
   email: string;
@@ -86,32 +87,17 @@ export default function Login() {
 
   const handleResendVerification = async () => {
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-      const response = await fetch(`${apiBase}/auth/resend-verification`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: userEmail }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Could not resend verification email");
-      }
-
+      const response = await api.post("/auth/resend-verification", { email: userEmail });
       toast({
         title: "Verification Email Sent!",
         description: "Please check your email and click the verification link.",
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || "Could not resend verification email";
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Could not resend verification email",
+        description: errorMessage,
       });
     }
   };

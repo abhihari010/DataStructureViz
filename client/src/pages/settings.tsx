@@ -128,7 +128,6 @@ export default function SettingsPage() {
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to update password. Please try again.';
       toast.error(errorMessage);
-      console.error('Password update error:', error);
     },
   });
 
@@ -147,7 +146,6 @@ export default function SettingsPage() {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 'Failed to delete account. Please try again.';
       toast.error(errorMessage);
-      console.error('Account deletion error:', error);
     },
   });
 
@@ -199,18 +197,15 @@ export default function SettingsPage() {
   const handlePasswordSubmitClick = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Password form submit clicked');
     
     // Trigger validation for all fields
     const isFormValid = await trigger();
     if (!isFormValid) {
-      console.log('Form validation failed');
       return false;
     }
     
     // Get the form values directly from react-hook-form
     const formValues = getValues();
-    console.log('Submitting form with values:', formValues);
     
     try {
       await onSubmitPassword({
@@ -220,7 +215,6 @@ export default function SettingsPage() {
       });
       return true;
     } catch (error) {
-      console.error('Error in form submission:', error);
       return false;
     }
   };

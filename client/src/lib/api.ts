@@ -3,9 +3,7 @@ import axios from "axios";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://datastructurevizbackend.onrender.com/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -19,11 +17,19 @@ api.interceptors.request.use(
     const url = config.url || "";
 
     // Exclude Authorization header for specific endpoints
-    const excludeAuthEndpoints = ["/auth/register", "/auth/login"];
-    if (
-      token &&
-      !excludeAuthEndpoints.some((endpoint) => url.includes(endpoint))
-    ) {
+    const excludeAuthEndpoints = [
+      "/auth/register",
+      "/auth/login",
+      "/auth/verify",
+      "/auth/resend-verification",
+      "/forgot-password",
+    ];
+
+    const shouldExclude = excludeAuthEndpoints.some((endpoint) =>
+      url.includes(endpoint)
+    );
+
+    if (token && !shouldExclude) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 

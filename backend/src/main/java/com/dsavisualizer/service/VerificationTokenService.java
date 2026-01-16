@@ -6,6 +6,7 @@ import com.dsavisualizer.repository.VerificationTokenRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -15,20 +16,30 @@ public class VerificationTokenService {
     private final EmailService emailService;
 
     public VerificationTokenService(VerificationTokenRepository tokenRepository,
-                                  EmailService emailService) {
+            EmailService emailService) {
         this.tokenRepository = tokenRepository;
         this.emailService = emailService;
     }
 
     @Transactional
     public void createVerificationToken(User user) {
-        // Delete any existing tokens for this user
-        tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
+        String token;
 
-        // Create new token
-        String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(token, user);
-        tokenRepository.save(verificationToken);
+        // Check if a valid token already exists
+        Optional<VerificationToken> existingToken = tokenRepository.findByUser(user)
+                .filter(vt -> !vt.isExpired() && !vt.isUsed());
+
+        if (existingToken.isPresent()) {
+            // Reuse existing valid token
+            token = existingToken.get().getToken();
+        } else {
+            // Delete any expired/used tokens and create a new one
+            tokenRepository.deleteByUser(user);
+
+            token = UUID.randomUUID().toString();
+            VerificationToken verificationToken = new VerificationToken(token, user);
+            tokenRepository.save(verificationToken);
+        }
 
         // Send verification email
         emailService.sendVerificationEmail(user.getEmail(), token);
@@ -48,4 +59,4 @@ public class VerificationTokenService {
                 })
                 .orElse(false);
     }
-} 
+}
