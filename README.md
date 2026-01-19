@@ -201,11 +201,4 @@ This project is licensed under the MIT License.
 ## Acknowledgements
 
 - [Judge0 API](https://judge0.com/) for code execution
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [React](https://react.dev/)
-- [Radix UI](https://www.radix-ui.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
 
----
-
-**Happy Learning and Coding!** 
