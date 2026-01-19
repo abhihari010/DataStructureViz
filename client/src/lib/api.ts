@@ -7,7 +7,8 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Important for sending cookies with CORS
+  withCredentials: true,
+  timeout: 30000,
 });
 
 // Request interceptor to add auth token
@@ -26,7 +27,7 @@ api.interceptors.request.use(
     ];
 
     const shouldExclude = excludeAuthEndpoints.some((endpoint) =>
-      url.includes(endpoint)
+      url.includes(endpoint),
     );
 
     if (token && !shouldExclude) {
@@ -35,7 +36,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor to handle common errors
@@ -71,7 +72,7 @@ api.interceptors.response.use(
 
     // For all other errors, or for 401s on form submissions, just reject so the UI can handle it.
     return Promise.reject(error);
-  }
+  },
 );
 
 // Auth endpoints
