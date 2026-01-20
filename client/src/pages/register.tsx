@@ -73,7 +73,7 @@ export default function Register() {
       toast({
         title: "Registration Successful!",
         description:
-          "Please check your email to verify your account before logging in.",
+          "Please check your email to verify your account before logging in. If you don't see the email, check your spam folder.",
       });
 
       // Redirect to login page instead of landing page
