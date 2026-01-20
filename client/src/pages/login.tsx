@@ -90,7 +90,7 @@ export default function Login() {
       const response = await api.post("/auth/resend-verification", { email: userEmail });
       toast({
         title: "Verification Email Sent!",
-        description: "Please check your email and click the verification link.",
+        description: "Please check your email and click the verification link. If you don't see it, check your spam folder.",
       });
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || "Could not resend verification email";
