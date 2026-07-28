@@ -18,6 +18,7 @@ import {
   Search
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import CountUp from "@/components/count-up";
 
 interface LinkedListNode {
   id: number;
@@ -38,6 +39,22 @@ const colors = [
 
 type InsertPosition = 'beginning' | 'end' | 'position';
 type DeletePosition = 'beginning' | 'end' | 'value';
+
+const toNodeArray = (head: LinkedListNode | null) => {
+  const nodes: Omit<LinkedListNode, "next">[] = [];
+  let current = head;
+  while (current) {
+    nodes.push({ id: current.id, value: current.value, color: current.color });
+    current = current.next;
+  }
+  return nodes;
+};
+
+const toLinkedList = (nodes: Omit<LinkedListNode, "next">[]) =>
+  nodes.reduceRight<LinkedListNode | null>(
+    (next, node) => ({ ...node, next }),
+    null,
+  );
 
 export default function LinkedListVisualization() {
   const [list, setList] = useState<{
@@ -94,114 +111,55 @@ export default function LinkedListVisualization() {
   const insertNode = () => {
     const value = parseInt(inputValue);
     if (isNaN(value)) return;
+    const parsedPosition = parseInt(position);
+    if (
+      insertPosition === "position" &&
+      (isNaN(parsedPosition) || parsedPosition < 0 || parsedPosition > list.size)
+    ) {
+      return;
+    }
 
     setOperationType('insert');
     const newNode = createNode(value);
     setNextId(prev => prev + 1);
-
-    if (insertPosition === 'beginning') {
-      setList(prev => ({
-        head: { ...newNode, next: prev.head },
-        size: prev.size + 1,
-      }));
-    } else if (insertPosition === 'end') {
-      if (!list.head) {
-        setList({
-          head: newNode,
-          size: 1,
-        });
-      } else {
-        let current = list.head;
-        while (current.next) {
-          current = current.next;
-        }
-        current.next = newNode;
-        setList(prev => ({
-          ...prev,
-          size: prev.size + 1,
-        }));
-      }
-    } else if (insertPosition === 'position') {
-      const pos = parseInt(position);
-      if (isNaN(pos) || pos < 0 || pos > list.size) return;
-
-      if (pos === 0) {
-        setList(prev => ({
-          head: { ...newNode, next: prev.head },
-          size: prev.size + 1,
-        }));
-      } else {
-        let current = list.head;
-        for (let i = 0; i < pos - 1 && current; i++) {
-          current = current.next!;
-        }
-        if (current) {
-          newNode.next = current.next;
-          current.next = newNode;
-          setList(prev => ({
-            ...prev,
-            size: prev.size + 1,
-          }));
-        }
-      }
-    }
+    setList((currentList) => {
+      const nodes = toNodeArray(currentList.head);
+      const insertionIndex =
+        insertPosition === "beginning"
+          ? 0
+          : insertPosition === "end"
+            ? nodes.length
+            : parsedPosition;
+      nodes.splice(insertionIndex, 0, {
+        id: newNode.id,
+        value: newNode.value,
+        color: newNode.color,
+      });
+      return { head: toLinkedList(nodes), size: nodes.length };
+    });
 
     setInputValue("");
     setPosition("");
   };
 
-  const deleteNode = () => {
+  const deleteNode = (target: DeletePosition = deletePosition) => {
     if (list.size === 0) return;
     setOperationType('delete');
+    const value = parseInt(inputValue);
+    if (target === "value" && isNaN(value)) return;
 
-    if (deletePosition === 'beginning') {
-      if (list.head) {
-        setList(prev => ({
-          head: prev.head!.next,
-          size: prev.size - 1,
-        }));
-      }
-    } else if (deletePosition === 'end') {
-      if (!list.head?.next) {
-        setList({ head: null, size: 0 });
-      } else {
-        let current = list.head;
-        while (current.next?.next) {
-          current = current.next;
-        }
-        current.next = null;
-        setList(prev => ({
-          ...prev,
-          size: prev.size - 1,
-        }));
-      }
-    } else if (deletePosition === 'value') {
-      const value = parseInt(inputValue);
-      if (isNaN(value)) return;
-
-      if (!list.head) return;
-
-      if (list.head.value === value) {
-        setList(prev => ({
-          head: prev.head!.next,
-          size: prev.size - 1,
-        }));
-        return;
-      }
-
-      let current = list.head;
-      while (current.next && current.next.value !== value) {
-        current = current.next;
-      }
-
-      if (current.next) {
-        current.next = current.next.next;
-        setList(prev => ({
-          ...prev,
-          size: prev.size - 1,
-        }));
-      }
-    }
+    setList((currentList) => {
+      const nodes = toNodeArray(currentList.head);
+      const removalIndex =
+        target === "beginning"
+          ? 0
+          : target === "end"
+            ? nodes.length - 1
+            : nodes.findIndex((node) => node.value === value);
+      if (removalIndex < 0) return currentList;
+      nodes.splice(removalIndex, 1);
+      return { head: toLinkedList(nodes), size: nodes.length };
+    });
 
     setInputValue("");
   };
@@ -321,79 +279,74 @@ export default function LinkedListVisualization() {
     setNextId(prev => prev + size);
   };
 
-  const renderList = () => {
-    const nodes = [];
-    let current = list.head;
-    let index = 0;
-
-    while (current) {
-      const isHighlighted = highlightedNode === current.id;
-      nodes.push(
-        <div key={current.id} className="flex flex-col items-center">
-          <div className="relative">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ 
-                opacity: 1, 
-                y: 0,
-                scale: isHighlighted ? [1, 1.1, 1] : 1,
-                x: isHighlighted ? [0, 10, -10, 0] : 0
-              }}
-              transition={{ 
-                duration: isHighlighted ? 0.5 : 0.3,
-                times: isHighlighted ? [0, 0.2, 0.5, 1] : undefined
-              }}
-              className={`flex items-center justify-center w-16 h-16 rounded-lg ${current.color} text-white font-bold text-lg relative
-                ${isHighlighted ? 'ring-4 ring-yellow-400' : ''}`}
-            >
-              {current.value}
-              <div className="absolute -top-6 text-xs text-gray-500">
-                {index === 0 ? 'Head' : `Node ${index + 1}`}
-              </div>
-            </motion.div>
-            {current.next ? (
-              <motion.div
-                className="absolute -right-6 top-1/2 transform -translate-y-1/2"
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ArrowRight className="w-8 h-8 text-gray-400" />
-              </motion.div>
-            ) : (
-              <div className="absolute -right-6 top-1/2 transform -translate-y-1/2">
-                <div className="w-8 h-8 flex items-center justify-center text-gray-400">
-                  ∅
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-      current = current.next;
-      index++;
-    }
+  const renderMotionList = () => {
+    const nodes = toNodeArray(list.head);
+    const entryOffset =
+      insertPosition === "beginning"
+        ? -72
+        : insertPosition === "end"
+          ? 72
+          : 0;
 
     return (
-      <div className="flex flex-wrap items-center gap-8 p-6 min-h-40 bg-gray-50 rounded-lg overflow-x-auto">
+      <div className="app-list-track flex min-h-40 flex-wrap items-center gap-8 overflow-x-auto rounded-lg bg-gray-50 p-6">
         {nodes.length > 0 ? (
-          <AnimatePresence>
-            {nodes.map((node, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: animationDuration }}
-                className="flex items-center"
-              >
-                {node}
-              </motion.div>
-            ))}
+          <AnimatePresence mode="popLayout">
+            {nodes.map((node, nodeIndex) => {
+              const isHighlighted = highlightedNode === node.id;
+              const hasNext = nodeIndex < nodes.length - 1;
+              return (
+                <motion.div
+                  layout="position"
+                  key={node.id}
+                  initial={{ opacity: 0, x: entryOffset, y: -34, scale: 0.72 }}
+                  animate={{
+                    opacity: 1,
+                    x: isHighlighted ? [0, 8, -8, 0] : 0,
+                    y: 0,
+                    scale: isHighlighted ? [1, 1.08, 1] : 1,
+                  }}
+                  exit={{ opacity: 0, y: -38, scale: 0.68 }}
+                  transition={{
+                    duration: animationDuration,
+                    layout: { type: "spring", stiffness: 310, damping: 25 },
+                  }}
+                  className="app-list-node-wrap flex items-center"
+                >
+                  <div className="relative">
+                    <div
+                      className={`app-list-node flex h-16 w-16 items-center justify-center rounded-lg ${node.color} text-lg font-bold text-white ${
+                        isHighlighted ? "is-highlighted" : ""
+                      }`}
+                    >
+                      {node.value}
+                      <span className="absolute -top-6 text-xs text-gray-500">
+                        {nodeIndex === 0 ? "Head" : `Node ${nodeIndex + 1}`}
+                      </span>
+                    </div>
+                    {hasNext ? (
+                      <motion.div
+                        className="absolute -right-6 top-1/2 -translate-y-1/2"
+                        initial={{ opacity: 0, scaleX: 0 }}
+                        animate={{ opacity: 1, scaleX: 1 }}
+                        transition={{ duration: 0.35, delay: 0.1 }}
+                        style={{ transformOrigin: "left center" }}
+                      >
+                        <ArrowRight className="h-8 w-8 text-gray-400" />
+                      </motion.div>
+                    ) : (
+                      <div className="absolute -right-6 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-gray-400">
+                        ∅
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         ) : (
           <div className="w-full text-center text-gray-400">
-            Linked list is empty. Add some nodes!
+            Linked list is empty. Add a node to begin.
           </div>
         )}
       </div>
@@ -464,7 +417,7 @@ export default function LinkedListVisualization() {
                 onClick={() => {
                   setOperationType('delete');
                   setDeletePosition('beginning');
-                  deleteNode();
+                  deleteNode('beginning');
                 }}
               >
                 <ListMinus className="w-4 h-4 mr-1" />
@@ -476,7 +429,7 @@ export default function LinkedListVisualization() {
                 onClick={() => {
                   setOperationType('delete');
                   setDeletePosition('end');
-                  deleteNode();
+                  deleteNode('end');
                 }}
               >
                 <ListMinus className="w-4 h-4 mr-1" />
@@ -579,9 +532,11 @@ export default function LinkedListVisualization() {
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-medium">Linked List</h3>
-              <span className="text-sm text-gray-500">Size: {list.size}</span>
+              <span className="text-sm text-gray-500" aria-live="polite">
+                Size: <CountUp value={list.size} />
+              </span>
             </div>
-            {renderList()}
+            {renderMotionList()}
           </div>
         </div>
       </CardContent>

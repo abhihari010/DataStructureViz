@@ -135,7 +135,7 @@ export default function StackVisualization() {
             </div>
             
             {/* Stack Elements */}
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {stack.length === 0 ? (
                 <div className="text-gray-500 italic py-8">Stack is empty</div>
               ) : (
@@ -143,17 +143,18 @@ export default function StackVisualization() {
                   {stack.map((element, index) => (
                     <motion.div
                       key={element.id}
-                      className={`w-32 h-12 ${element.color} rounded-lg flex items-center justify-center border-2 border-opacity-50 shadow-lg relative`}
-                      initial={{ opacity: 0, y: -20, scale: 0.8 }}
+                      layout="position"
+                      className={`app-stack-node w-32 h-12 ${index === stack.length - 1 ? 'is-top bg-red-500' : element.color} rounded-lg flex items-center justify-center border border-opacity-50 shadow-lg relative`}
+                      initial={{ opacity: 0, y: -72, scale: 0.88 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -30, scale: 0.8 }}
+                      exit={{ opacity: 0, y: -58, scale: 0.78 }}
                       transition={{ 
-                        duration: animationDuration,
                         type: "spring",
-                        stiffness: 100,
-                        damping: 15
+                        stiffness: 320,
+                        damping: 24,
+                        layout: { type: "spring", stiffness: 300, damping: 25 },
                       }}
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ y: -3 }}
                     >
                       <span className="text-white font-semibold">{element.value}</span>
                       {index === stack.length - 1 && (
@@ -178,11 +179,11 @@ export default function StackVisualization() {
             <div className="flex items-center space-x-2">
               <Input
                 type="number"
-                placeholder="Enter value"
+                placeholder="Value…"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="w-24"
-                onKeyPress={(e) => e.key === 'Enter' && push()}
+                className="w-32"
+                onKeyDown={(e) => e.key === 'Enter' && push()}
               />
               <Button 
                 onClick={push}
@@ -216,13 +217,18 @@ export default function StackVisualization() {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" aria-label="Previous stack step">
                 <StepBack className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={togglePlayPause}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={togglePlayPause}
+                aria-label={isPlaying ? "Pause stack playback" : "Play stack playback"}
+              >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" aria-label="Next stack step">
                 <StepForward className="w-4 h-4" />
               </Button>
             </div>

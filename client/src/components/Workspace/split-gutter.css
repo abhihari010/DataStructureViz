@@ -23,7 +23,7 @@
   cursor: row-resize;
   margin: -2px 0;
   z-index: 10;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .horizontal-gutter:hover {
@@ -63,7 +63,7 @@
   cursor: col-resize;
   margin: 0 -2px;
   z-index: 10;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .vertical-gutter:hover {

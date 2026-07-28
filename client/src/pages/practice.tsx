@@ -1,93 +1,119 @@
-import { useQuery } from '@tanstack/react-query';
-import { getAllProblems, PracticeProblem } from '@/services/problemService';
-import Navigation from '@/components/navigation';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
-import { getTopicConfig } from '@/config/topic-config';
-import React from 'react';
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, Search } from "lucide-react";
+import { Link } from "wouter";
+import AppShell from "@/components/app-shell";
+import Reveal from "@/components/reveal";
+import { getAllProblems, type PracticeProblem } from "@/services/problemService";
 
-// Map topicId to display name and icon (extend as needed)
-const TOPIC_META: Record<string, { name: string; icon?: React.ReactNode }> = {
-  'stack': { name: 'Stack' },
-  'queue': { name: 'Queue' },
-  'linked-list': { name: 'Linked List' },
-  'binary-tree': { name: 'Binary Tree' },
-  'graph': { name: 'Graph' },
-  'array': { name: 'Array/HashMap' },
-  // Add more as needed
-};
-
-function groupBy<T, K extends keyof any>(arr: T[], getKey: (item: T) => K): Record<K, T[]> {
-  return arr.reduce((acc, item) => {
-    const key = getKey(item);
-    (acc[key] = acc[key] || []).push(item);
-    return acc;
-  }, {} as Record<K, T[]>);
-}
-
-const getDifficultyBadge = (difficulty: string) => {
-  switch (difficulty.toLowerCase()) {
-    case 'easy':
-      return <Badge className="bg-green-100 text-green-800">Easy</Badge>;
-    case 'medium':
-      return <Badge className="bg-yellow-100 text-yellow-800">Medium</Badge>;
-    case 'hard':
-      return <Badge className="bg-red-100 text-red-800">Hard</Badge>;
-    default:
-      return <Badge>Unknown</Badge>;
-  }
+const topicNames: Record<string, string> = {
+  stack: "Stack",
+  queue: "Queue",
+  "linked-list": "Linked list",
+  "binary-tree": "Binary tree",
+  graph: "Graph",
+  array: "Array / HashMap",
 };
 
 export default function PracticePage() {
+  const [query, setQuery] = useState(
+    () => new URLSearchParams(window.location.search).get("q") || "",
+  );
   const { data: problems = [], isLoading } = useQuery<PracticeProblem[]>({
-    queryKey: ['allProblems'],
+    queryKey: ["allProblems"],
     queryFn: getAllProblems,
   });
+  const filteredProblems = useMemo(
+    () =>
+      problems.filter((problem) =>
+        `${problem.title} ${problem.description || ""} ${problem.topicId}`
+          .toLowerCase()
+          .includes(query.toLowerCase()),
+      ),
+    [problems, query],
+  );
+  const grouped = filteredProblems.reduce<Record<string, PracticeProblem[]>>(
+    (result, problem) => {
+      (result[problem.topicId] ||= []).push(problem);
+      return result;
+    },
+    {},
+  );
 
-  // Group problems by topicId
-  const grouped = groupBy(problems, (p) => p.topicId);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    query ? url.searchParams.set("q", query) : url.searchParams.delete("q");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  }, [query]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Practice Problems</h1>
-        <p className="text-muted-foreground mb-8">Browse and solve problems grouped by data structure.</p>
+    <AppShell>
+      <div className="app-index-page app-practice-page">
+        <header className="app-index-header">
+          <span className="app-kicker">Practice ledger</span>
+          <h1>Turn the trace<br />into working code.</h1>
+          <p>
+            Choose a problem by structure, inspect its constraints, and solve it
+            in the full coding workspace.
+          </p>
+        </header>
+
+        <div className="app-index-tools">
+          <label className="app-index-search">
+            <Search aria-hidden="true" />
+            <span className="sr-only">Search practice problems</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search problems…"
+            />
+          </label>
+          <span className="app-result-count">
+            {filteredProblems.length} problem{filteredProblems.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
         {isLoading ? (
-          <div>Loading problems...</div>
-        ) : (
-          Object.entries(grouped).map(([topicId, problems]) => {
-            const meta = TOPIC_META[topicId] || { name: topicId };
-            const topicConfig = getTopicConfig(topicId);
-            return (
-              <div key={topicId} className="mb-10">
-                <div className="flex items-center mb-4">
-                  {meta.icon && <span className="mr-2">{meta.icon}</span>}
-                  <h2 className="text-2xl font-semibold">{meta.name}</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {problems.map((problem) => (
-                    <Card key={problem.id} className="flex flex-col h-full">
-                      <CardHeader>
-                        <CardTitle className="text-lg">{problem.title}</CardTitle>
-                        <CardDescription>{problem.description?.slice(0, 80)}{problem.description && problem.description.length > 80 ? '...' : ''}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-1 flex flex-col justify-between">
-                        <div className="mb-4">{getDifficultyBadge(problem.difficulty)}</div>
-                        <Button asChild className="w-full mt-auto">
-                          <Link href={`/problems/${problem.id}`}>Solve</Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
+          <div className="app-inline-state" role="status">Loading the practice ledger…</div>
+        ) : Object.keys(grouped).length > 0 ? (
+          <div className="app-practice-groups">
+            {Object.entries(grouped).map(([topicId, topicProblems], groupIndex) => (
+              <Reveal key={topicId} delay={Math.min(groupIndex, 4) * 0.06}>
+              <section>
+                <header>
+                  <h2>{topicNames[topicId] || topicId}</h2>
+                  <span>{topicProblems.length} entries</span>
+                </header>
+                <ol>
+                  {topicProblems.map((problem, index) => (
+                    <li key={problem.id}>
+                      <Link href={`/problems/${problem.id}`}>
+                        <span className="app-problem-row-index">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <strong>{problem.title}</strong>
+                          <p>{problem.description}</p>
+                        </div>
+                        <span className="app-difficulty">{problem.difficulty}</span>
+                        <span className="app-problem-action">
+                          Solve
+                          <ArrowRight aria-hidden="true" />
+                        </span>
+                      </Link>
+                    </li>
                   ))}
-                </div>
-              </div>
-            );
-          })
+                </ol>
+              </section>
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <div className="app-inline-state">
+            No practice problems match “{query}”.
+          </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
-} 
+}

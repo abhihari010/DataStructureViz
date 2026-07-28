@@ -1,6 +1,8 @@
-import React, { useState, useRef } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Plus, RotateCcw } from "lucide-react";
+import { useRef, useState } from "react";
 
-interface Node {
+interface GraphNode {
   id: number;
   x: number;
   y: number;
@@ -16,119 +18,150 @@ const SVG_WIDTH = 700;
 const SVG_HEIGHT = 400;
 
 export default function GraphVisualization() {
-  const [nodes, setNodes] = useState<Node[]>([]);
+  const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedNode, setSelectedNode] = useState<number | null>(null);
   const [draggedNode, setDraggedNode] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const nodeId = useRef(1);
+  const reduceMotion = useReducedMotion();
 
-  // Add a node at a random position
   const addNode = () => {
     const x = Math.random() * (SVG_WIDTH - 2 * NODE_RADIUS) + NODE_RADIUS;
     const y = Math.random() * (SVG_HEIGHT - 2 * NODE_RADIUS) + NODE_RADIUS;
-    setNodes((prev) => [...prev, { id: nodeId.current++, x, y }]);
+    setNodes((current) => [...current, { id: nodeId.current++, x, y }]);
   };
 
-  // Handle node click for edge creation
   const handleNodeClick = (id: number) => {
     if (selectedNode === null) {
       setSelectedNode(id);
-    } else if (selectedNode !== id) {
-      // Add edge if it doesn't exist
-      if (!edges.some(e => (e.from === selectedNode && e.to === id) || (e.from === id && e.to === selectedNode))) {
-        setEdges((prev) => [...prev, { from: selectedNode, to: id }]);
+      return;
+    }
+
+    if (selectedNode !== id) {
+      const exists = edges.some(
+        (edge) =>
+          (edge.from === selectedNode && edge.to === id) ||
+          (edge.from === id && edge.to === selectedNode),
+      );
+      if (!exists) {
+        setEdges((current) => [...current, { from: selectedNode, to: id }]);
       }
-      setSelectedNode(null);
-    } else {
-      setSelectedNode(null);
     }
+    setSelectedNode(null);
   };
 
-  // Drag logic
-  const handleMouseDown = (id: number, e: React.MouseEvent) => {
-    setDraggedNode(id);
-    e.stopPropagation();
-  };
-  const handleMouseUp = () => setDraggedNode(null);
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (draggedNode !== null && svgRef.current) {
-      const rect = svgRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      setNodes((prev) => prev.map(n => n.id === draggedNode ? { ...n, x, y } : n));
-    }
+  const moveDraggedNode = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (draggedNode === null || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * SVG_WIDTH;
+    const y = ((event.clientY - rect.top) / rect.height) * SVG_HEIGHT;
+    setNodes((current) =>
+      current.map((node) =>
+        node.id === draggedNode
+          ? {
+              ...node,
+              x: Math.max(NODE_RADIUS, Math.min(SVG_WIDTH - NODE_RADIUS, x)),
+              y: Math.max(NODE_RADIUS, Math.min(SVG_HEIGHT - NODE_RADIUS, y)),
+            }
+          : node,
+      ),
+    );
   };
 
-  // Reset graph
   const resetGraph = () => {
     setNodes([]);
     setEdges([]);
     setSelectedNode(null);
+    setDraggedNode(null);
     nodeId.current = 1;
   };
 
   return (
-    <div>
-      <div className="mb-2 flex gap-2">
-        <button onClick={addNode} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Add Node</button>
-        <button onClick={resetGraph} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Reset</button>
-        <span className="text-sm text-gray-500">Click two nodes to add an edge. Drag nodes to move them.</span>
+    <div className="app-graph-tool">
+      <div className="app-graph-toolbar">
+        <button type="button" onClick={addNode}>
+          <Plus aria-hidden="true" />
+          Add node
+        </button>
+        <button type="button" onClick={resetGraph}>
+          <RotateCcw aria-hidden="true" />
+          Reset
+        </button>
+        <span id="graph-instructions">
+          Select two nodes to draw an edge. Drag a node to move it.
+        </span>
       </div>
       <svg
         ref={svgRef}
-        width={SVG_WIDTH}
-        height={SVG_HEIGHT}
-        className="bg-white border rounded shadow"
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
+        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
+        className="app-graph-canvas"
+        aria-describedby="graph-instructions"
+        aria-label="Interactive graph visualization"
+        role="img"
+        onPointerMove={moveDraggedNode}
+        onPointerUp={() => setDraggedNode(null)}
+        onPointerLeave={() => setDraggedNode(null)}
       >
-        {/* Edges */}
-        {edges.map((edge, i) => {
-          const from = nodes.find(n => n.id === edge.from);
-          const to = nodes.find(n => n.id === edge.to);
-          if (!from || !to) return null;
-          return (
-            <line
-              key={i}
-              x1={from.x}
-              y1={from.y}
-              x2={to.x}
-              y2={to.y}
-              stroke="#888"
-              strokeWidth={3}
-            />
-          );
-        })}
-        {/* Nodes */}
-        {nodes.map((node) => (
-          <g
-            key={node.id}
-            onMouseDown={e => handleMouseDown(node.id, e)}
-            onClick={() => handleNodeClick(node.id)}
-            style={{ cursor: 'pointer' }}
-          >
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r={NODE_RADIUS}
-              fill={selectedNode === node.id ? '#2563eb' : '#60a5fa'}
-              stroke="#1e40af"
-              strokeWidth={selectedNode === node.id ? 4 : 2}
-            />
-            <text
-              x={node.x}
-              y={node.y + 5}
-              textAnchor="middle"
-              fontSize={18}
-              fill="#fff"
-              fontWeight="bold"
+        <AnimatePresence>
+          {edges.map((edge) => {
+            const from = nodes.find((node) => node.id === edge.from);
+            const to = nodes.find((node) => node.id === edge.to);
+            if (!from || !to) return null;
+            return (
+              <motion.line
+                key={`${edge.from}-${edge.to}`}
+                x1={from.x}
+                y1={from.y}
+                x2={to.x}
+                y2={to.y}
+                stroke="currentColor"
+                strokeWidth={3}
+                initial={reduceMotion ? false : { opacity: 0, pathLength: 0 }}
+                animate={{ opacity: 1, pathLength: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              />
+            );
+          })}
+        </AnimatePresence>
+        <AnimatePresence>
+          {nodes.map((node) => (
+            <motion.g
+              key={node.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`Node ${node.id}${selectedNode === node.id ? ", selected" : ""}`}
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.55, y: -28 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{ type: "spring", stiffness: 340, damping: 21 }}
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                setDraggedNode(node.id);
+                event.stopPropagation();
+              }}
+              onClick={() => handleNodeClick(node.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleNodeClick(node.id);
+                }
+              }}
             >
-              {node.id}
-            </text>
-          </g>
-        ))}
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={NODE_RADIUS}
+                className={selectedNode === node.id ? "is-selected" : ""}
+              />
+              <text x={node.x} y={node.y + 6} textAnchor="middle">
+                {node.id}
+              </text>
+            </motion.g>
+          ))}
+        </AnimatePresence>
       </svg>
     </div>
   );
-} 
+}

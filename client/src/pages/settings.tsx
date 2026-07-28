@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import AppShell from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,8 +10,7 @@ import { useForm } from "react-hook-form";
 import { User, auth } from "@/lib/api";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Loader2, Pencil, Save, User as UserIcon, Mail, Lock, Check, Trash2 } from "lucide-react";
-import { Link } from "wouter";
+import { Loader2, Pencil, Save, User as UserIcon, Mail, Lock, Check, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -256,18 +256,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="flex items-center mb-8">
-        <Link href="/" className="mr-4">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold">Account Settings</h1>
+    <AppShell>
+    <div className="app-settings-page">
+      <div className="app-page-heading">
+        <p className="app-eyebrow">Account desk</p>
+        <h1>Settings</h1>
+        <p>Manage your profile, credentials, and account access.</p>
       </div>
       
       {/* Profile Section */}
-      <Card className="mb-8">
+      <Card className="app-settings-section">
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
@@ -386,7 +384,7 @@ export default function SettingsPage() {
       </Card>
       
       {/* Password Section */}
-      <Card className="mb-8">
+      <Card className="app-settings-section">
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
@@ -522,14 +520,14 @@ export default function SettingsPage() {
       </Card>
       
       {/* Danger Zone */}
-      <Card className="border-red-100">
+      <Card className="app-settings-section app-settings-danger">
         <CardHeader>
           <CardTitle className="text-red-600">Danger Zone</CardTitle>
           <CardDescription>Irreversible and destructive actions</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4">
-            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+            <div className="app-settings-action">
               <div>
                 <h4 className="font-medium text-red-800">Logout</h4>
                 <p className="text-sm text-red-600">Sign out of your account</p>
@@ -539,7 +537,7 @@ export default function SettingsPage() {
               </Button>
             </div>
             
-            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+            <div className="app-settings-action">
               <div>
                 <h4 className="font-medium text-red-800">Delete Account</h4>
                 <p className="text-sm text-red-600">Permanently delete your account and all data</p>
@@ -585,5 +583,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
     </div>
+    </AppShell>
   );
 }

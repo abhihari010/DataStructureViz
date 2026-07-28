@@ -1,13 +1,5 @@
-import Navigation from "@/components/navigation";
-import Sidebar from "@/components/sidebar";
 import QueueVisualization from "@/components/visualizations/queue-visualization";
-import CodePanel from "@/components/code-panel";
-import PracticeSection from "@/components/practice-section";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Bookmark, Star } from "lucide-react";
-import React from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import TopicWorkspace from "@/components/topic-workspace";
 
 const queueCodeExamples = {
   javascript: `class Queue {
@@ -128,62 +120,22 @@ const spaceComplexity = "O(n)";
 
 export default function Queue() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
-        <Sidebar />
-        
-        <main className="flex-1 overflow-auto">
-          <div className="min-h-full flex flex-col">
-            {/* Topic Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Stack Data Structure</h1>
-                  <p className="text-gray-600 mt-1">
-                    Last In, First Out (LIFO) principle with push and pop operations
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                    <Star className="w-3 h-3 mr-1" />
-                    Beginner
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* Split Panel Layout */}
-            <div className="flex-1 flex overflow-auto">
-              {/* Code Panel - Left side - Wider */}
-              <div className="w-[36rem] border-r border-gray-200 overflow-auto flex-shrink-0">
-                <div className="h-full p-4">
-                  <CodePanel 
-                    codeExamples={queueCodeExamples}
-                  />
-                </div>
-              </div>
-
-              {/* Visualization Panel - Takes remaining width */}
-              <div className="flex-1 overflow-auto p-4 ml-4">
-                <div className="max-w-4xl mx-auto w-full h-full flex items-center justify-center">
-                  <div className="w-full">
-                    <QueueVisualization />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Panel */}
-            <div className="bg-white border-t border-gray-200 p-6">
-            <ErrorBoundary fallback={<div>Error rendering PracticeSection</div>}>
-              <PracticeSection topicId="queue" />
-            </ErrorBoundary>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    <TopicWorkspace
+      category="Data structure"
+      codeExamples={queueCodeExamples}
+      difficulty="Beginner"
+      title="Queue"
+      summary="First in, first out. Add at the rear, remove from the front, and keep the direction of travel visible."
+      overview="A queue has two meaningful boundaries. Enqueue advances the rear; dequeue advances the front. The values between them retain arrival order."
+      complexity={[
+        { label: "Enqueue", value: timeComplexity.enqueue },
+        { label: "Dequeue", value: timeComplexity.dequeue },
+        { label: "Front", value: timeComplexity.front },
+        { label: "Space", value: spaceComplexity },
+      ]}
+      topicId="queue"
+    >
+      <QueueVisualization />
+    </TopicWorkspace>
   );
 }

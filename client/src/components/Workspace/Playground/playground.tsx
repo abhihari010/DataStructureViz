@@ -1,6 +1,7 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { Play, Send, Settings, Terminal, X, Loader2 } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 
 type Language = 'javascript' | 'python' | 'java' | 'cpp';
 
@@ -36,6 +37,7 @@ const Playground = forwardRef<any, PlaygroundProps>(({
 }, ref) => {
   const [activeTab, setActiveTab] = useState<'code'>('code');
   const editorRef = useRef<any>(null);
+  const reduceMotion = useReducedMotion();
 
   useImperativeHandle(ref, () => ({
     layout: () => {
@@ -70,12 +72,12 @@ const Playground = forwardRef<any, PlaygroundProps>(({
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] text-white">
       {/* Toolbar */}
-      <div className="flex items-center justify-between bg-[#252526] px-4 py-2 border-b border-gray-700">
+      <div className="app-editor-toolbar flex items-center justify-between bg-[#252526] px-4 py-2 border-b border-gray-700">
         <div className="flex space-x-2">
           <button
             onClick={handleRunTests}
             disabled={isRunning}
-            className={`px-3 py-1.5 text-sm rounded-md ${
+            className={`app-run-tests px-3 py-1.5 text-sm rounded-md ${
               isRunning
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 text-white'
@@ -89,7 +91,7 @@ const Playground = forwardRef<any, PlaygroundProps>(({
           <button
             onClick={handleSubmit}
             disabled={isRunning || !canSubmit || isSubmitting}
-            className={`px-3 py-1.5 text-sm rounded-md ${
+            className={`app-submit-solution px-3 py-1.5 text-sm rounded-md ${
               isRunning || !canSubmit || isSubmitting
                 ? 'bg-blue-800 text-blue-300 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -98,12 +100,13 @@ const Playground = forwardRef<any, PlaygroundProps>(({
             {isSubmitting && (
               <Loader2 className="animate-spin inline-block mr-2" size={16} />
             )}
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+            Submit
           </button>
         </div>
         <div className="flex items-center space-x-2">
           {/* language selector */}
           <select
+            aria-label="Editor language"
             value={language}
             onChange={e => onLanguageChange(e.target.value)}
             disabled={isRunning}
@@ -115,29 +118,47 @@ const Playground = forwardRef<any, PlaygroundProps>(({
               </option>
             ))}
           </select>
-          <button className="p-1 text-gray-400 hover:text-white" title="Settings">
+          <button
+            type="button"
+            className="p-1 text-gray-400 hover:text-white"
+            aria-label="Editor settings"
+            title="Settings"
+          >
             <Settings size={18} />
           </button>
-          <button className="p-1 text-gray-400 hover:text-white" title="Clear console">
+          <button
+            type="button"
+            className="p-1 text-gray-400 hover:text-white"
+            aria-label="Clear console"
+            title="Clear console"
+          >
             <X size={16} />
           </button>
         </div>
       </div>
 
       {/* Editor */}
-      <Editor
-        height="100%"
-        language={language}
-        theme="vs-dark"
-        value={code}
-        onMount={handleEditorDidMount}
-        onChange={v => onCodeChange(v || '')}
-        options={{
-          minimap: { enabled: false },
-          automaticLayout: true,
-          fontSize: 14,
-        }}
-      />
+      <motion.div
+        key={language}
+        className="min-h-0 flex-1"
+        initial={reduceMotion ? false : { opacity: 0.45, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+      >
+        <Editor
+          height="100%"
+          language={language}
+          theme="vs-dark"
+          value={code}
+          onMount={handleEditorDidMount}
+          onChange={v => onCodeChange(v || '')}
+          options={{
+            minimap: { enabled: false },
+            automaticLayout: true,
+            fontSize: 14,
+          }}
+        />
+      </motion.div>
     </div>
   );
 });

@@ -1,172 +1,157 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'wouter';
-import { Clock, ArrowRight, CheckCircle, PlayCircle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { useAuthJWT } from '@/hooks/useAuthJWT';
-import { progressApi } from '@/lib/api';
-import Navigation from '@/components/navigation';
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowRight,
+  ArrowUpDown,
+  Check,
+  Layers,
+  Link as LinkIcon,
+  List,
+  MapPin,
+  Network,
+  Route,
+  Search,
+  Shuffle,
+  TreePine,
+} from "lucide-react";
+import { Link } from "wouter";
+import AppShell from "@/components/app-shell";
+import Reveal from "@/components/reveal";
+import { progressApi } from "@/lib/api";
+import type { UserProgress } from "@shared/schema";
 
-interface UserProgress {
-  id: number;
-  userId: string;
-  topicId: string;
-  completed: boolean;
-  score: number | null;
-  timeSpent: number | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-  completedAt: string | null;
-}
-
-// Define topic metadata with difficulty levels and estimated times
-const TOPICS = [
-  { id: "linked-list", name: "Linked List", difficulty: "Beginner", time: 30, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19V5a2 2 0 0 1 2-2h13.9a.1.1 0 0 1 .1.1v13.8a.1.1 0 0 1-.1.1H6a2 2 0 0 1-2-2zM8 9h8m-8 4h8m-8 4h5" /></svg> },
-  { id: "stack", name: "Stack", difficulty: "Beginner", time: 20, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><path d="M16 8H8v10h8V8z" /></svg> },
-  { id: "queue", name: "Queue", difficulty: "Beginner", time: 20, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><path d="M16 8H8v10h8V8z" /><path d="M8 10h8" /><path d="M8 14h8" /></svg> },
-  { id: "binary-tree", name: "Binary Tree", difficulty: "Intermediate", time: 45, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 12h8m-4-4v8m-6 4h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" /></svg> },
-  { id: "graph", name: "Graph", difficulty: "Advanced", time: 60, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="M4.93 4.93l1.41 1.41" /><path d="M17.66 17.66l1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="M6.34 17.66l-1.41 1.41" /><path d="M19.07 4.93l-1.41 1.41" /></svg> },
-  { id: "hashmap", name: "Hashmap", difficulty: "Intermediate", time: 25, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><path d="M8 12h8m-8-4h8m-8 8h8" /></svg> },
-  { id: "heap", name: "Heap", difficulty: "Intermediate", time: 30, icon: <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M10 11v6" /><path d="M14 11v6" /></svg> },
+const topics = [
+  { id: "stack", name: "Stack", type: "Structure", difficulty: "Beginner", time: 20, path: "/topics/stack", icon: Layers, note: "Push, pop, and inspect the top value." },
+  { id: "queue", name: "Queue", type: "Structure", difficulty: "Beginner", time: 20, path: "/topics/queue", icon: List, note: "Follow values from enqueue to dequeue." },
+  { id: "linked-list", name: "Linked list", type: "Structure", difficulty: "Beginner", time: 30, path: "/topics/linked-list", icon: LinkIcon, note: "Move through references one node at a time." },
+  { id: "binary-tree", name: "Binary tree", type: "Structure", difficulty: "Intermediate", time: 45, path: "/topics/binary-tree", icon: TreePine, note: "Build, search, and trace three traversal orders." },
+  { id: "graph", name: "Graph", type: "Structure", difficulty: "Intermediate", time: 60, path: "/topics/graph", icon: Network, note: "Connect vertices and inspect adjacency." },
+  { id: "bubble-sort", name: "Bubble sort", type: "Algorithm", difficulty: "Beginner", time: 25, path: "/bubble-sort", icon: ArrowUpDown, note: "Watch adjacent comparisons settle the array." },
+  { id: "quick-sort", name: "Quick sort", type: "Algorithm", difficulty: "Intermediate", time: 35, path: "/quick-sort", icon: Shuffle, note: "Partition around a pivot and recurse." },
+  { id: "bfs", name: "Breadth-first search", type: "Algorithm", difficulty: "Intermediate", time: 35, path: "/bfs", icon: Route, note: "Expand the frontier level by level." },
+  { id: "dfs", name: "Depth-first search", type: "Algorithm", difficulty: "Intermediate", time: 35, path: "/dfs", icon: Route, note: "Follow a branch until it must backtrack." },
+  { id: "dijkstra", name: "Dijkstra", type: "Algorithm", difficulty: "Advanced", time: 50, path: "/dijkstra", icon: MapPin, note: "Resolve shortest distances by priority." },
 ];
 
 export default function TopicsPage() {
-  const { user } = useAuthJWT();
-  
-  // Fetch user progress data
-  const { data: progress = [], isLoading } = useQuery({
-    queryKey: ['userProgress'],
-    queryFn: async () => {
-      try {
-        const response = await progressApi.getUserProgress();
-        return response.data;
-      } catch (error) {
-        console.error('Error fetching progress:', error);
-        return [];
-      }
-    },
-    enabled: !!user,
-    retry: 1
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialFilter = initialParams.get("type");
+  const [query, setQuery] = useState(initialParams.get("q") || "");
+  const [filter, setFilter] = useState<"All" | "Structure" | "Algorithm">(
+    initialFilter === "Structure" || initialFilter === "Algorithm" ? initialFilter : "All",
+  );
+  const { data: progress = [], isLoading } = useQuery<UserProgress[]>({
+    queryKey: ["/api/progress"],
+    queryFn: progressApi.getUserProgress,
   });
+  const progressByTopic = new Map(progress.map((item) => [item.topicId, item]));
+  const visibleTopics = useMemo(
+    () =>
+      topics.filter(
+        (topic) =>
+          (filter === "All" || topic.type === filter) &&
+          `${topic.name} ${topic.note}`.toLowerCase().includes(query.toLowerCase()),
+      ),
+    [filter, query],
+  );
 
-  // Calculate completion status for each topic
-  const topicsWithProgress = TOPICS.map(topic => {
-    const topicProgress = Array.isArray(progress) 
-      ? progress.find((p: UserProgress) => p.topicId === topic.id) || {}
-      : {};
-    const isCompleted = topicProgress?.completed || false;
-    const timeSpent = topicProgress?.timeSpent || 0;
-    const score = topicProgress?.score || 0;
-    
-    // Calculate progress percentage based on time spent vs estimated time
-    const progressPercent = Math.min(Math.round((timeSpent / (topic.time * 60)) * 100), 100);
-    
-    return {
-      ...topic,
-      isCompleted,
-      timeSpent,
-      score,
-      progressPercent
-    };
-  });
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    query ? url.searchParams.set("q", query) : url.searchParams.delete("q");
+    filter === "All"
+      ? url.searchParams.delete("type")
+      : url.searchParams.set("type", filter);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  }, [filter, query]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Data Structures</h1>
-          <p className="text-muted-foreground">
-            Explore and learn about different data structures. Start with the basics and work your way up!
+    <AppShell>
+      <div className="app-index-page">
+        <header className="app-index-header">
+          <span className="app-kicker">Topic index</span>
+          <h1>Open the structure.<br />Inspect the state.</h1>
+          <p>
+            Search every implemented visualization and continue from the exact
+            operation you want to understand.
           </p>
+        </header>
+
+        <div className="app-index-tools">
+          <label className="app-index-search">
+            <Search aria-hidden="true" />
+            <span className="sr-only">Search topics</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search the index…"
+            />
+          </label>
+          <div className="app-segmented-control" aria-label="Filter topics">
+            {(["All", "Structure", "Algorithm"] as const).map((value) => (
+              <button
+                type="button"
+                className={filter === value ? "is-active" : ""}
+                onClick={() => setFilter(value)}
+                aria-pressed={filter === value}
+                key={value}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            // Loading skeletons
-            Array(6).fill(0).map((_, i) => (
-              <Card key={`skeleton-${i}`} className="h-48">
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-2 w-full mb-4" />
-                  <Skeleton className="h-10 w-full" />
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            // Topic cards
-            topicsWithProgress.map((topic) => (
-              <Card key={topic.id} className="h-full flex flex-col">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                        {topic.icon}
-                      </div>
-                      <CardTitle className="text-lg">{topic.name}</CardTitle>
+        {isLoading ? (
+          <div className="app-inline-state" role="status">Loading the topic index…</div>
+        ) : visibleTopics.length > 0 ? (
+          <ol className="app-topic-index">
+            {visibleTopics.map((topic, index) => {
+              const Icon = topic.icon;
+              const topicProgress = progressByTopic.get(topic.id);
+              return (
+                <li key={topic.id}>
+                  <Reveal delay={Math.min(index, 5) * 0.045}>
+                  <Link href={topic.path}>
+                    <span className="app-topic-index-number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="app-topic-index-icon">
+                      <Icon aria-hidden="true" />
+                    </span>
+                    <div className="app-topic-index-copy">
+                      <strong>{topic.name}</strong>
+                      <p>{topic.note}</p>
                     </div>
-                    <Badge 
-                      variant={topic.difficulty === 'Beginner' ? 'default' : 
-                              topic.difficulty === 'Intermediate' ? 'secondary' : 'destructive'}
+                    <div className="app-topic-index-meta">
+                      <span>{topic.type}</span>
+                      <span>{topic.difficulty}</span>
+                      <span>{topic.time} min</span>
+                    </div>
+                    <span
+                      className={`app-topic-index-status ${
+                        topicProgress?.completed ? "is-complete" : ""
+                      }`}
                     >
-                      {topic.difficulty}
-                    </Badge>
-                  </div>
-                  <CardDescription className="flex items-center mt-2">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>{topic.time} min</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                      <span>Progress</span>
-                      <span>{topic.progressPercent}%</span>
-                    </div>
-                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                      <div 
-                        className={`h-full ${topic.progressPercent > 0 ? 'bg-primary' : 'bg-gray-300'}`}
-                        style={{ width: `${topic.progressPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="mt-auto">
-                    <Button asChild className="w-full">
-                      <Link to={`/topics/${topic.id}`}>
-                        {topic.isCompleted ? (
-                          <>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            View Again
-                          </>
-                        ) : topic.progressPercent > 0 ? (
-                          <>
-                            <PlayCircle className="h-4 w-4 mr-2" />
-                            Continue Learning
-                          </>
-                        ) : (
-                          <>
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                            Start Learning
-                          </>
-                        )}
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                      {topicProgress?.completed ? <Check aria-hidden="true" /> : null}
+                      {topicProgress?.completed
+                        ? "Resolved"
+                        : topicProgress?.timeSpent
+                          ? "Continue"
+                          : "Open"}
+                    </span>
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                  </Reveal>
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <div className="app-inline-state">
+            No topics match “{query}”. Try a structure or algorithm name.
+          </div>
+        )}
       </div>
-    </div>
+    </AppShell>
   );
 }

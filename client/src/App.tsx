@@ -33,8 +33,11 @@ function Router() {
 
   if (isLoading || isAuthTransitioning) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-lg">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-[#151816] text-[#f2f0e9]">
+        <div className="flex items-center gap-3 text-sm" role="status" aria-live="polite">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#e15a3f]" aria-hidden="true" />
+          Loading workspace…
+        </div>
       </div>
     );
   }

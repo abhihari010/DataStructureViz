@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ThumbsUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { ThumbsUp, ChevronDown, ChevronRight, LoaderCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import SolutionPanel from '@/components/SolutionPanel/solution-panel';
@@ -214,11 +214,13 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
     
     return (
       <div className="relative flex-shrink-0 border-b border-gray-700 bg-gray-800/50">
-        <div className="flex">
+        <div className="flex" role="tablist" aria-label="Problem workspace">
           {mainTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               className={`relative px-6 py-3 text-sm font-medium flex items-center transition-colors ${
                 activeTab === tab.id 
                   ? 'text-white' 
@@ -227,18 +229,11 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
             >
               {tab.label}
               {activeTab === tab.id && (
-                <span 
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                  style={{
-                    background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.5) 0%, rgba(59, 130, 246, 1) 50%, rgba(59, 130, 246, 0.5) 100%)',
-                    boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)'
-                  }}
-                />
+                <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-blue-500" />
               )}
             </button>
           ))}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent" />
       </div>
     );
   };
@@ -251,8 +246,8 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
         <div className="flex items-center mt-2">
           <span
             className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              difficulty === 'Easy' ? 'bg-green-800 text-green-200' :
-              difficulty === 'Medium' ? 'bg-yellow-800 text-yellow-200' :
+              difficulty?.toLowerCase() === 'easy' ? 'bg-green-800 text-green-200' :
+              difficulty?.toLowerCase() === 'medium' ? 'bg-yellow-800 text-yellow-200' :
               'bg-red-800 text-red-200'
             }`}
           >
@@ -420,14 +415,14 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-white">Submissions</h3>
           <div className="text-sm text-gray-400">
-            {submissionsLoading ? 'Loading...' : `Showing ${transformedSubmissions.length} submission${transformedSubmissions.length !== 1 ? 's' : ''}`}
+            {submissionsLoading ? 'Loading…' : `Showing ${transformedSubmissions.length} submission${transformedSubmissions.length !== 1 ? 's' : ''}`}
           </div>
         </div>
         
         {submissionsLoading ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mb-2"></div>
-            <p className="text-center">Loading submissions...</p>
+            <LoaderCircle className="mb-2 h-8 w-8 animate-spin" aria-hidden="true" />
+            <p className="text-center">Loading submissions…</p>
           </div>
         ) : submissionsError ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
@@ -510,7 +505,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
       <textarea
         value={notes}
         onChange={handleNotesChange}
-        placeholder="Write your notes here..."
+        placeholder="Write your notes here…"
         className="flex-1 w-full p-3 bg-gray-800 border border-gray-700 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
       />
       <div className="mt-2 text-xs text-gray-500">

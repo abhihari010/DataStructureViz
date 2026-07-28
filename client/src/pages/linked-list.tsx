@@ -1,13 +1,5 @@
-import Navigation from "@/components/navigation";
-import Sidebar from "@/components/sidebar";
 import LinkedListVisualization from "@/components/visualizations/linked-list-visualization";
-import CodePanel from "@/components/code-panel";
-import PracticeSection from "@/components/practice-section";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Bookmark, Star } from "lucide-react";
-import React from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import TopicWorkspace from "@/components/topic-workspace";
 
 export default function LinkedList() {
 
@@ -315,60 +307,22 @@ public class LinkedList<T> {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
-        <Sidebar />
-        
-        <main className="flex-1 overflow-auto">
-          <div className="min-h-full flex flex-col">
-            {/* Topic Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Linked List Data Structure</h1>
-                  <p className="text-gray-600 mt-1">
-                    A linear data structure where elements are stored in nodes with references to the next node
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                    <Star className="w-3 h-3 mr-1" />
-                    Intermediate
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* Split Panel Layout */}
-            <div className="flex-1 flex overflow-auto">
-              {/* Code Panel - Left side - Wider */}
-              <div className="w-[36rem] border-r border-gray-200 overflow-auto flex-shrink-0">
-                <div className="h-full p-4">
-                  <CodePanel 
-                    codeExamples={linkedListCodeExamples}
-                  />
-                </div>
-              </div>
-
-              {/* Visualization Panel - Right side */}
-              <div className="flex-1 overflow-auto p-4">
-                <div className="max-w-6xl mx-auto w-full h-full">
-                  <LinkedListVisualization />
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Panel */}
-            <div className="bg-white border-t border-gray-200 p-6">
-              <ErrorBoundary fallback={<div>Error rendering PracticeSection</div>}>
-                <PracticeSection topicId="linked-list" />
-              </ErrorBoundary>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    <TopicWorkspace
+      category="Data structure"
+      codeExamples={linkedListCodeExamples}
+      difficulty="Beginner"
+      title="Linked list"
+      summary="Values live in separate nodes. References are the route. Insert, remove, and search by changing or following those links."
+      overview="The sequence is not stored by physical position. Watch the head reference and each next pointer: changing one link can insert or detach an entire part of the list."
+      complexity={[
+        { label: "Head insert", value: "O(1)" },
+        { label: "Tail insert", value: "O(n)" },
+        { label: "Search", value: "O(n)" },
+        { label: "Space", value: "O(n)" },
+      ]}
+      topicId="linked-list"
+    >
+      <LinkedListVisualization />
+    </TopicWorkspace>
   );
 }
