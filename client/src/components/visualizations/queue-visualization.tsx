@@ -120,15 +120,15 @@ export default function QueueVisualization() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -50 }}
                       transition={{ duration: animationDuration }}
-                      className={`${item.color} w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0`}
+                      className={`${index === 0 ? 'bg-red-500' : item.color} w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0`}
                     >
                       {item.value}
                     </motion.div>
                     {index === 0 && (
-                      <div className="mt-1 text-xs text-blue-600 font-bold">FRONT</div>
+                      <div className="mt-1 text-xs text-red-600 font-bold">FRONT</div>
                     )}
                     {index === queue.length - 1 && (
-                      <div className="mt-1 text-xs text-green-600 font-bold">REAR</div>
+                      <div className="mt-1 text-xs text-gray-700 font-bold">REAR</div>
                     )}
                   </div>
                 ))

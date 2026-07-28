@@ -1,10 +1,5 @@
-import Navigation from "@/components/navigation";
-import Sidebar from "@/components/sidebar";
+import TopicWorkspace from "@/components/topic-workspace";
 import QuickSortVisualization from "@/components/visualizations/quick-sort-visualization";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import React from "react";
 
 const codeExamples = {
   cpp: `void quickSort(int arr[], int low, int high) {
@@ -69,71 +64,21 @@ static int partition(int[] arr, int low, int high) {
 
 export default function QuickSortPage() {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Navigation />
-        <main className="flex-1 p-6 flex flex-col gap-6">
-          <h1 className="text-3xl font-bold mb-2">Quick Sort</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <QuickSortVisualization />
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Sort Algorithm</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="cpp" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="cpp">C++</TabsTrigger>
-                    <TabsTrigger value="python">Python</TabsTrigger>
-                    <TabsTrigger value="java">Java</TabsTrigger>
-                    <TabsTrigger value="javascript">JavaScript</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="cpp">
-                    <pre className="bg-gray-900 text-white rounded p-4 overflow-x-auto text-sm">
-                      <code>{codeExamples.cpp}</code>
-                    </pre>
-                  </TabsContent>
-                  <TabsContent value="python">
-                    <pre className="bg-gray-900 text-white rounded p-4 overflow-x-auto text-sm">
-                      <code>{codeExamples.python}</code>
-                    </pre>
-                  </TabsContent>
-                  <TabsContent value="java">
-                    <pre className="bg-gray-900 text-white rounded p-4 overflow-x-auto text-sm">
-                      <code>{codeExamples.java}</code>
-                    </pre>
-                  </TabsContent>
-                  <TabsContent value="javascript">
-                    <pre className="bg-gray-900 text-white rounded p-4 overflow-x-auto text-sm">
-                      <code>{codeExamples.javascript}</code>
-                    </pre>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-2">
-                <b>Quick Sort</b> is a highly efficient sorting algorithm that uses a divide-and-conquer approach. It selects a pivot element and partitions the array into two subarrays: elements less than the pivot and elements greater than or equal to the pivot. It then recursively sorts the subarrays.
-              </p>
-              <ul className="list-disc ml-6 mb-2">
-                <li>Best and Average Case Time Complexity: <Badge variant="outline">O(n log n)</Badge></li>
-                <li>Worst Case Time Complexity: <Badge variant="outline">O(n²)</Badge> (rare, when the pivot is always the smallest or largest element)</li>
-                <li>Space Complexity: <Badge variant="outline">O(log n)</Badge> (due to recursion stack)</li>
-                <li>Stable: <Badge variant="outline">No</Badge></li>
-              </ul>
-              <p>
-                Quick sort is widely used in practice due to its average-case efficiency and in-place sorting, but care must be taken to avoid worst-case scenarios (e.g., by using randomized pivots).
-              </p>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    </div>
+    <TopicWorkspace
+      category="Sorting algorithm"
+      codeExamples={codeExamples}
+      difficulty="Intermediate"
+      title="Quick sort"
+      summary="Choose a pivot, partition values around it, and recursively resolve the smaller ranges."
+      overview="Every partition puts one pivot in its final position. The visualization makes the active range, comparisons, and recursive decomposition visible."
+      complexity={[
+        { label: "Best time", value: "O(n log n)" },
+        { label: "Average time", value: "O(n log n)" },
+        { label: "Worst time", value: "O(n?)" },
+        { label: "Space", value: "O(log n)" },
+      ]}
+    >
+      <QuickSortVisualization />
+    </TopicWorkspace>
   );
-} 
+}

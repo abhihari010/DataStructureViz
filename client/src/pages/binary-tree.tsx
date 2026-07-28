@@ -1,34 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Play,
-  Code,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw,
-  Zap,
-  BookOpen,
-  Lightbulb,
-  PlusCircle,
-  MinusCircle,
-  Search,
-  Binary,
-  Bookmark,
-  Star
-} from "lucide-react";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
-import CodePanel from "@/components/code-panel";
 import BinaryTreeVisualization from "@/components/visualizations/BinaryTreeVisualization";
-import Navigation from "@/components/navigation";
-import Sidebar from "@/components/sidebar";
-import PracticeSection from "@/components/practice-section";
+import TopicWorkspace from "@/components/topic-workspace";
 
 // Code examples for different languages
 const codeExamples = {
@@ -343,109 +314,23 @@ public class BinarySearchTree {
 
 
 export default function BinaryTreePage() {
-  const { theme } = useTheme();
-  const [isCodeExpanded, setIsCodeExpanded] = useState(true);
-  const [activeTab, setActiveTab] = useState('implementation');
-  
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      
-      <div className="flex" style={{ height: 'calc(100vh - 4rem)' }}>
-        <Sidebar />
-        
-        <main className="flex-1 overflow-auto">
-          <div className="min-h-full flex flex-col">
-            {/* Topic Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Binary Tree</h1>
-                  <p className="text-gray-600 dark:text-gray-300 mt-1">
-                    A tree data structure where each node has at most two children, referred to as the left and right child.
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                    <Star className="w-3 h-3 mr-1" />
-                    Intermediate
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            
-            {/* Main Content */}
-            <div className="flex-1 p-6 space-y-6">
-              {/* Key Concepts Section */}
-              
-              {/* Main Content Area */}
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Left Column - Code Panel */}
-                <div className="lg:col-span-2">
-                  <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-full">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                          Implementation
-                        </h3>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsCodeExpanded(!isCodeExpanded)}
-                            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                          >
-                            {isCodeExpanded ? (
-                              <ChevronUp className="h-4 w-4 mr-1" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 mr-1" />
-                            )}
-                            {isCodeExpanded ? 'Collapse' : 'Expand'}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        <Tabs 
-                          value={activeTab} 
-                          onValueChange={setActiveTab}
-                          className="w-full"
-                        >
-                          <TabsList className="w-full">
-                            <TabsTrigger value="implementation">Implementation</TabsTrigger>
-                          </TabsList>
-                        </Tabs>
-                      </div>
-                    </div>
-                    <div className={cn("flex-1 overflow-auto transition-all", isCodeExpanded ? 'max-h-[800px]' : 'h-[500px]')}>
-                      <CodePanel codeExamples={codeExamples} />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Right Column - Visualization and Traversals */}
-                <div className="lg:col-span-3 space-y-6">
-                  {/* Main Visualization */}
-                  <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-visible flex flex-col">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Interactive Visualization
-                      </h3>
-                    </div>
-                    <div className="p-4 flex items-center justify-center">
-                      <BinaryTreeVisualization />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Practice Section */}
-              <div className="mt-6">
-                <PracticeSection topicId="binary-tree" />
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    <TopicWorkspace
+      category="Data structure"
+      codeExamples={codeExamples}
+      difficulty="Intermediate"
+      title="Binary tree"
+      summary="Every comparison chooses left or right. Build the tree, then trace how ordering produces search and traversal paths."
+      overview="The shape records insertion order while the binary-search invariant guides every comparison. Watch one current node at a time and note where the path branches."
+      complexity={[
+        { label: "Average search", value: "O(log n)" },
+        { label: "Worst search", value: "O(n)" },
+        { label: "Traversal", value: "O(n)" },
+        { label: "Space", value: "O(n)" },
+      ]}
+      topicId="binary-tree"
+    >
+      <BinaryTreeVisualization />
+    </TopicWorkspace>
   );
 }

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import com.vladmihalcea.hibernate.type.json.JsonType;
 import org.hibernate.annotations.Type;
 
 @Entity
@@ -30,19 +30,19 @@ public class PracticeProblem {
     @Column(name = "topic_id", nullable = false)
     private String topicId;
 
-    @Type(JsonBinaryType.class)
+    @Type(JsonType.class)
     @Column(name = "test_cases", columnDefinition = "jsonb")
     private List<Map<String, Object>> testCases;
 
-    @Type(JsonBinaryType.class)
+    @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, Map<String, String>> solutions; // Key: language, Value: { code: string, timeComplexity: string, spaceComplexity: string }
 
-    @Type(JsonBinaryType.class)
+    @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, String> timeComplexity; // Key: language, Value: time complexity
 
-    @Type(JsonBinaryType.class)
+    @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, String> spaceComplexity; // Key: language, Value: space complexity
 
@@ -55,7 +55,7 @@ public class PracticeProblem {
     @Column(name = "method_name")
     private String methodName;
 
-    @Type(JsonBinaryType.class)
+    @Type(JsonType.class)
     @Column(name = "method_signature", columnDefinition = "jsonb")
     private MethodSignature methodSignature;
 

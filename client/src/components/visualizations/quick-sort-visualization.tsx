@@ -153,7 +153,7 @@ export default function QuickSortVisualization() {
                 {current.arr.map((_: any, idx: number) => (
                   <div key={idx} className="w-16 flex items-center justify-center">
                     {idx === current.pivot ? (
-                      <span style={{ fontSize: 24, color: '#ef4444' }}>↑</span>
+                      <span style={{ fontSize: 24, color: '#ff735b' }}>↑</span>
                     ) : (idx === current.j || idx === current.i) ? (
                       <span style={{ fontSize: 24, color: '#facc15' }}>↑</span>
                     ) : null}
@@ -168,7 +168,7 @@ export default function QuickSortVisualization() {
           <div className="flex items-center gap-1">
             <span className="w-5 h-5 rounded bg-red-500 ring-4 ring-red-300 inline-block"></span>
             <span className="text-sm ml-1">Pivot</span>
-            <span style={{ fontSize: 18, color: '#ef4444', marginLeft: 4 }}>↑</span>
+            <span style={{ fontSize: 18, color: '#ff735b', marginLeft: 4 }}>↑</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="w-5 h-5 rounded bg-yellow-400 ring-4 ring-yellow-300 inline-block border border-yellow-400"></span>
@@ -212,4 +212,4 @@ export default function QuickSortVisualization() {
       </div>
     </Card>
   );
-} 
+}

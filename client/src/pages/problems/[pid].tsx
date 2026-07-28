@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "wouter";
+import AppShell from "@/components/app-shell";
 import Workspace from "@/components/Workspace/workspace";
 import { getProblemById, PracticeProblem } from "@/services/problemService";
 
@@ -37,14 +38,28 @@ const ProblemPage: React.FC = () => {
   }, [params.pid]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading problem...</div>;
+    return (
+      <AppShell immersive>
+        <div className="app-route-state">Loading problem...</div>
+      </AppShell>
+    );
   }
 
   if (error || !problem) {
-    return <div className="flex items-center justify-center h-screen text-red-500">{error || "Problem not found"}</div>;
+    return (
+      <AppShell immersive>
+        <div className="app-route-state app-route-state-error">{error || "Problem not found"}</div>
+      </AppShell>
+    );
   }
 
-  return <Workspace problem={problem} />;
+  return (
+    <AppShell immersive>
+      <div className="app-problem-workspace">
+        <Workspace problem={problem} />
+      </div>
+    </AppShell>
+  );
 };
 
 export default ProblemPage;

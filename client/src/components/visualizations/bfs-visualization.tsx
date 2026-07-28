@@ -290,10 +290,10 @@ export default function BfsVisualization() {
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                stroke={traversed ? "#f59e42" : "#888"}
+                stroke={traversed ? "#ff735b" : "#6c6592"}
                 strokeWidth={traversed ? 5 : 3}
-                initial={{ stroke: "#888" }}
-                animate={{ stroke: traversed ? "#f59e42" : "#888", strokeWidth: traversed ? 5 : 3 }}
+                initial={{ stroke: "#6c6592" }}
+                animate={{ stroke: traversed ? "#ff735b" : "#6c6592", strokeWidth: traversed ? 5 : 3 }}
                 transition={{ duration: 0.3 }}
               />
             );
@@ -320,13 +320,13 @@ export default function BfsVisualization() {
                   cx={node.x}
                   cy={node.y}
                   r={NODE_RADIUS}
-                  fill={current ? '#f59e42' : visited ? '#2563eb' : queued ? '#38bdf8' : isStart ? '#f59e42' : '#60a5fa'}
-                  stroke={toBeQueued ? '#fbbf24' : '#1e40af'}
+                  fill={current ? '#ff735b' : visited ? '#a896ff' : queued ? '#7df4c4' : isStart ? '#ff735b' : '#211d3c'}
+                  stroke={toBeQueued ? '#ff735b' : '#f7f1e7'}
                   strokeWidth={toBeQueued ? 6 : current || isStart ? 4 : 2}
                   initial={false}
                   animate={{
-                    fill: current ? '#f59e42' : visited ? '#2563eb' : queued ? '#38bdf8' : isStart ? '#f59e42' : '#60a5fa',
-                    stroke: toBeQueued ? '#fbbf24' : '#1e40af',
+                    fill: current ? '#ff735b' : visited ? '#a896ff' : queued ? '#7df4c4' : isStart ? '#ff735b' : '#211d3c',
+                    stroke: toBeQueued ? '#ff735b' : '#f7f1e7',
                     strokeWidth: toBeQueued ? 6 : current || isStart ? 4 : 2,
                   }}
                   transition={{ duration: 0.2 }}
@@ -336,7 +336,7 @@ export default function BfsVisualization() {
                   y={node.y + 5}
                   textAnchor="middle"
                   fontSize={18}
-                  fill="#fff"
+                  fill="#fff9f2"
                   fontWeight="bold"
                 >
                   {node.id}
@@ -430,4 +430,4 @@ export default function BfsVisualization() {
       </div>
     </Card>
   );
-} 
+}

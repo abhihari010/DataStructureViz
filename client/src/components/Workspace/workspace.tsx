@@ -9,6 +9,7 @@ import { executeCode as executeCodeApi, PracticeProblem, TestCaseResult } from '
 import SolutionPanel from '@/components/SolutionPanel/solution-panel';
 import { solutionsApi } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
 
 interface WorkspaceProps {
   problem: PracticeProblem;
@@ -279,21 +280,18 @@ public:
   }, [allTestsRun, allPassed, problem.id, code, language, lastRuntime, lastMemory, queryClient]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#1e1e1e]">
+    <div className="app-coding-workspace flex flex-col bg-[#1e1e1e]">
       <div className="flex-1 flex overflow-hidden">
         <Split className="split flex-1" sizes={[40,60]} direction="horizontal" gutterSize={6} minSize={[200, 200]}>
           {/* Left pane: problem text and solutions */}
           <div className="flex flex-col h-full overflow-hidden">
-            {/* Home Button */}
-            <div className="flex items-center px-4 py-2 border-b border-gray-700 bg-gray-800/50">
+            <div className="app-coding-back flex items-center px-4 py-2 border-b border-gray-700 bg-gray-800/50">
               <button 
-                onClick={() => setLocation("/")}
+                onClick={() => setLocation("/practice")}
                 className="text-gray-300 hover:text-white flex items-center text-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Home
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to practice
               </button>
             </div>
             
@@ -323,35 +321,38 @@ public:
           </div>
 
           {/* Right pane: editor + test cases */}
-          <Split className="split flex flex-col" sizes={[60,40]} direction="vertical" gutterSize={6} minSize={[200, 200]}
+          <Split className="split flex min-h-0 self-stretch flex-col" sizes={[60,40]} direction="vertical" gutterSize={6} minSize={[200, 200]}
             onDragEnd={() => {
               if (playgroundRef.current && playgroundRef.current.layout) {
                 playgroundRef.current.layout();
               }
             }}
           >
-            {/* Submission Message */}
-            {submissionMessage && (
-              <div className={`px-4 py-2 text-sm font-medium ${
-                submissionMessage.includes('successfully') 
-                  ? 'bg-green-900/30 text-green-400 border border-green-800/50' 
-                  : 'bg-red-900/30 text-red-400 border border-red-800/50'
-              }`}>
-                {submissionMessage}
+            <div className="flex min-h-0 flex-col overflow-hidden">
+              {submissionMessage && (
+                <div className={`px-4 py-2 text-sm font-medium ${
+                  submissionMessage.includes('successfully')
+                    ? 'bg-green-900/30 text-green-400 border border-green-800/50'
+                    : 'bg-red-900/30 text-red-400 border border-red-800/50'
+                }`}>
+                  {submissionMessage}
+                </div>
+              )}
+              <div className="min-h-0 flex-1">
+                <Playground
+                  ref={playgroundRef}
+                  code={code}
+                  language={language}
+                  isRunning={isRunning}
+                  onCodeChange={setCode}
+                  onLanguageChange={setLanguage}
+                  onRunTests={runAllTestCases}
+                  onSubmit={handleSubmit}
+                  canSubmit={allTestsRun && allPassed}
+                  isSubmitting={isSubmitting}
+                />
               </div>
-            )}
-            <Playground
-              ref={playgroundRef}
-              code={code}
-              language={language}
-              isRunning={isRunning}
-              onCodeChange={setCode}
-              onLanguageChange={setLanguage}
-              onRunTests={runAllTestCases}
-              onSubmit={handleSubmit}
-              canSubmit={allTestsRun && allPassed}
-              isSubmitting={isSubmitting}
-            />
+            </div>
             <TestCasesPanel
               testCases={parsedTestCases}
               testResults={testResults}

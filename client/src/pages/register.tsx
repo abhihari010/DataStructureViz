@@ -1,47 +1,58 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthJWT } from "@/hooks/useAuthJWT";
-import { ChartGantt } from "lucide-react";
+import { Helmet } from "react-helmet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import axios from "axios";
+import {
+  AlertCircle,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  LockKeyhole,
+  Mail,
+  UserRound,
+} from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { AuthLayout } from "@/components/auth-layout";
+import { useToast } from "@/hooks/use-toast";
 import { auth } from "@/lib/api";
 
 const registerSchema = z
   .object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
+    firstName: z.string().trim().min(1, "Enter your first name."),
+    lastName: z.string().trim().min(1, "Enter your last name."),
     email: z
       .string()
-      .min(1, "Email is required")
-      .email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
+      .trim()
+      .min(1, "Enter your email address.")
+      .email("Enter a valid email address."),
+    password: z.string().min(6, "Password must contain at least 6 characters."),
+    confirmPassword: z.string().min(1, "Confirm your password."),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Passwords do not match.",
     path: ["confirmPassword"],
   });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
+const registerSteps = [
+  { label: "Name", detail: "Label your path" },
+  { label: "Email", detail: "Set the address" },
+  { label: "Key", detail: "Create a password" },
+  { label: "Match", detail: "Confirm the key" },
+  { label: "Ready", detail: "Create the account" },
+];
+
 export default function Register() {
   const [, setLocation] = useLocation();
-  const { register: registerUser } = useAuthJWT();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -54,164 +65,296 @@ export default function Register() {
     },
   });
 
+  const values = form.watch();
+  const hasName = Boolean(values.firstName.trim() && values.lastName.trim());
+  const hasEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email);
+  const hasPassword = values.password.length >= 6;
+  const passwordsMatch =
+    hasPassword &&
+    values.confirmPassword.length > 0 &&
+    values.confirmPassword === values.password;
+  const activeStep =
+    hasName && hasEmail && hasPassword && passwordsMatch
+      ? 4
+      : hasName && hasEmail && hasPassword
+        ? 3
+        : hasName && hasEmail
+          ? 2
+          : hasName
+            ? 1
+            : 0;
   async function onSubmit(data: RegisterFormData) {
     setIsLoading(true);
+    setServerError(null);
 
     try {
-      // Create the registration request object
-      const registrationData = {
+      await auth.register({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         password: data.password,
-      };
-
-      // Make the registration request
-      await auth.register(registrationData);
-
-      // Show success message about email verification
-      toast({
-        title: "Registration Successful!",
-        description:
-          "Please check your email to verify your account before logging in. If you don't see the email, check your spam folder.",
       });
 
-      // Redirect to login page instead of landing page
-      // This makes it clear that they need to verify their email before they can log in
+      toast({
+        title: "Account created",
+        description:
+          "Check your email to verify the account before signing in. Check spam if it is not in your inbox.",
+      });
+
       setTimeout(() => {
         setLocation("/login");
       }, 2000);
     } catch (error) {
-      console.error("Registration error:", error);
+      let errorMessage = "Your account could not be created. Try again.";
+
       if (axios.isAxiosError(error) && error.response?.data) {
-        const errorMessage = error.response.data.message || error.response.data;
-        toast({
-          variant: "destructive",
-          title: "Registration Error",
-          description:
-            typeof errorMessage === "object"
-              ? Object.values(errorMessage).join(", ")
-              : errorMessage,
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Registration Error",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Could not create your account. Please try again.",
-        });
+        const responseMessage = error.response.data.message || error.response.data;
+        errorMessage =
+          typeof responseMessage === "object"
+            ? Object.values(responseMessage).join(", ")
+            : String(responseMessage);
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+
+      setServerError(errorMessage);
+      window.scrollTo({ top: 0 });
+      toast({
+        variant: "destructive",
+        title: "Account not created",
+        description: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 flex flex-col items-center">
-          <div className="flex items-center space-x-2 mb-4">
-            <ChartGantt className="h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-bold">DSA Visualizer</h2>
-          </div>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Enter your details to get started</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  {...form.register("firstName")}
-                  id="firstName"
-                  placeholder="John"
-                  disabled={isLoading}
-                />
-                {form.formState.errors.firstName && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.firstName.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  {...form.register("lastName")}
-                  id="lastName"
-                  placeholder="Doe"
-                  disabled={isLoading}
-                />
-                {form.formState.errors.lastName && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.lastName.message}
-                  </p>
-                )}
-              </div>
+    <>
+      <Helmet>
+        <title>Create account | DSA Visualizer</title>
+        <meta
+          name="description"
+          content="Create a DSA Visualizer account and begin learning through interactive algorithm visualizations."
+        />
+      </Helmet>
+
+      <AuthLayout
+        activeStep={activeStep}
+        description="Create the account you will use for visual lessons and practice."
+        mode="register"
+        steps={registerSteps}
+        switchHref="/login"
+        switchLabel="Sign in"
+        switchPrompt="Already have an account?"
+        title="Start your path."
+      >
+        <form
+          className="auth-form"
+          onSubmit={form.handleSubmit(onSubmit)}
+          noValidate
+        >
+          {serverError && (
+            <div className="auth-alert" role="alert">
+              <AlertCircle aria-hidden="true" />
+              <p>{serverError}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
+          )}
+
+          <div className="auth-name-grid">
+            <div className="auth-field">
+              <div className="auth-field-label-row">
+                <label htmlFor="register-first-name">First name</label>
+              </div>
+              <div className="auth-input-wrap">
+                <UserRound aria-hidden="true" />
+                <input
+                  {...form.register("firstName")}
+                  id="register-first-name"
+                  className="auth-input"
+                  placeholder="Ada"
+                  autoComplete="given-name"
+                  disabled={isLoading}
+                  autoFocus
+                  aria-invalid={Boolean(form.formState.errors.firstName)}
+                  aria-describedby={
+                    form.formState.errors.firstName
+                      ? "register-first-name-error"
+                      : undefined
+                  }
+                />
+              </div>
+              {form.formState.errors.firstName && (
+                <p className="auth-field-error" id="register-first-name-error">
+                  <AlertCircle aria-hidden="true" />
+                  {form.formState.errors.firstName.message}
+                </p>
+              )}
+            </div>
+
+            <div className="auth-field">
+              <div className="auth-field-label-row">
+                <label htmlFor="register-last-name">Last name</label>
+              </div>
+              <div className="auth-input-wrap">
+                <UserRound aria-hidden="true" />
+                <input
+                  {...form.register("lastName")}
+                  id="register-last-name"
+                  className="auth-input"
+                  placeholder="Lovelace"
+                  autoComplete="family-name"
+                  disabled={isLoading}
+                  aria-invalid={Boolean(form.formState.errors.lastName)}
+                  aria-describedby={
+                    form.formState.errors.lastName
+                      ? "register-last-name-error"
+                      : undefined
+                  }
+                />
+              </div>
+              {form.formState.errors.lastName && (
+                <p className="auth-field-error" id="register-last-name-error">
+                  <AlertCircle aria-hidden="true" />
+                  {form.formState.errors.lastName.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="auth-field">
+            <div className="auth-field-label-row">
+              <label htmlFor="register-email">Email address</label>
+            </div>
+            <div className="auth-input-wrap">
+              <Mail aria-hidden="true" />
+              <input
                 {...form.register("email")}
-                id="email"
+                id="register-email"
+                className="auth-input"
                 type="email"
                 placeholder="name@example.com"
+                autoComplete="email"
                 disabled={isLoading}
+                aria-invalid={Boolean(form.formState.errors.email)}
+                aria-describedby={
+                  form.formState.errors.email ? "register-email-error" : undefined
+                }
               />
-              {form.formState.errors.email && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.email.message}
-                </p>
-              )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                {...form.register("password")}
-                id="password"
-                type="password"
-                disabled={isLoading}
-              />
-              {form.formState.errors.password && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.password.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                {...form.register("confirmPassword")}
-                id="confirmPassword"
-                type="password"
-                disabled={isLoading}
-              />
-              {form.formState.errors.confirmPassword && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-            <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create account"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            <span className="text-muted-foreground">
-              Already have an account?{" "}
-            </span>
-            <Button
-              variant="link"
-              className="p-0 h-auto font-semibold"
-              onClick={() => setLocation("/login")}
-            >
-              Sign in
-            </Button>
+            {form.formState.errors.email && (
+              <p className="auth-field-error" id="register-email-error">
+                <AlertCircle aria-hidden="true" />
+                {form.formState.errors.email.message}
+              </p>
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          <div className="auth-field">
+            <div className="auth-field-label-row">
+              <label htmlFor="register-password">Password</label>
+            </div>
+            <div className="auth-input-wrap auth-input-wrap--password">
+              <LockKeyhole aria-hidden="true" />
+              <input
+                {...form.register("password")}
+                id="register-password"
+                className="auth-input"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                disabled={isLoading}
+                aria-invalid={Boolean(form.formState.errors.password)}
+                aria-describedby={
+                  form.formState.errors.password
+                    ? "register-password-error"
+                    : "register-password-hint"
+                }
+              />
+              <button
+                type="button"
+                className="auth-password-toggle"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+              </button>
+            </div>
+            <p className="auth-password-hint" id="register-password-hint">
+              Use 6 or more characters.
+            </p>
+            {form.formState.errors.password && (
+              <p className="auth-field-error" id="register-password-error">
+                <AlertCircle aria-hidden="true" />
+                {form.formState.errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <div className="auth-field">
+            <div className="auth-field-label-row">
+              <label htmlFor="register-confirm-password">Confirm password</label>
+            </div>
+            <div className="auth-input-wrap auth-input-wrap--password">
+              <LockKeyhole aria-hidden="true" />
+              <input
+                {...form.register("confirmPassword")}
+                id="register-confirm-password"
+                className="auth-input"
+                type={showConfirmation ? "text" : "password"}
+                autoComplete="new-password"
+                disabled={isLoading}
+                aria-invalid={Boolean(form.formState.errors.confirmPassword)}
+                aria-describedby={
+                  form.formState.errors.confirmPassword
+                    ? "register-confirm-password-error"
+                    : undefined
+                }
+              />
+              <button
+                type="button"
+                className="auth-password-toggle"
+                onClick={() => setShowConfirmation((visible) => !visible)}
+                aria-label={
+                  showConfirmation ? "Hide confirmed password" : "Show confirmed password"
+                }
+                aria-pressed={showConfirmation}
+              >
+                {showConfirmation ? (
+                  <EyeOff aria-hidden="true" />
+                ) : (
+                  <Eye aria-hidden="true" />
+                )}
+              </button>
+            </div>
+            {form.formState.errors.confirmPassword && (
+              <p className="auth-field-error" id="register-confirm-password-error">
+                <AlertCircle aria-hidden="true" />
+                {form.formState.errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            className="auth-submit"
+            type="submit"
+            disabled={isLoading}
+            aria-busy={isLoading}
+          >
+            <span>Create account</span>
+            {isLoading ? (
+              <LoaderCircle className="is-spinning" aria-hidden="true" />
+            ) : (
+              <ArrowRight aria-hidden="true" />
+            )}
+          </button>
+        </form>
+
+        <p className="auth-form-switch">
+          Already registered?
+          <Link href="/login">Sign in</Link>
+        </p>
+      </AuthLayout>
+    </>
   );
 }

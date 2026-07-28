@@ -75,8 +75,8 @@ export default function BinaryTreeVisualization() {
 
   // Color mapping
   const fillMap: Record<ColorClass, string> = {
-    'bg-blue-500': '#3b82f6','bg-green-500': '#10b981','bg-purple-500': '#8b5cf6',
-    'bg-yellow-500': '#f59e0b','bg-pink-500': '#ec4899','bg-indigo-500': '#6366f1',
+    'bg-blue-500': '#a896ff','bg-green-500': '#7df4c4','bg-purple-500': '#302a52',
+    'bg-yellow-500': '#f6c453','bg-pink-500': '#ff735b','bg-indigo-500': '#6c6592',
   };
   const randColor = useCallback(() => COLORS[Math.floor(Math.random() * COLORS.length)], []);
 
@@ -179,7 +179,7 @@ export default function BinaryTreeVisualization() {
           style={{
             filter: isHi ? 'drop-shadow(0 0 8px rgba(255,255,0,0.8))' : undefined,
             transform: isHi ? 'scale(1.1)' : 'scale(1)',
-            transition: 'all .2s ease',
+            transition: 'filter .2s ease, transform .2s ease',
           }}
         />
         <text
@@ -188,8 +188,8 @@ export default function BinaryTreeVisualization() {
           dy=".35em"
           textAnchor="middle"
           style={{
-            fill: '#000',
-            stroke: '#fff',
+            fill: '#fff9f2',
+            stroke: '#17152d',
             strokeWidth: 2,
             paintOrder: 'stroke',
             fontSize: '24px',

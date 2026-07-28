@@ -264,13 +264,13 @@ export default function DijkstraVisualization() {
                   y1={startY}
                   x2={endX}
                   y2={endY}
-                  stroke={highlight ? "#fbbf24" : "#888"}
+                  stroke={highlight ? "#ff735b" : "#6c6592"}
                   strokeWidth={highlight ? 6 : 3}
                   markerEnd={`url(#arrowhead${i})`}
                 />
                 <polygon
                   points={`${endX},${endY} ${arrowX1},${arrowY1} ${arrowX2},${arrowY2}`}
-                  fill={highlight ? "#fbbf24" : "#888"}
+                  fill={highlight ? "#ff735b" : "#6c6592"}
                 />
               </g>
             );
@@ -285,8 +285,8 @@ export default function DijkstraVisualization() {
                   cx={node.x}
                   cy={node.y}
                   r={NODE_RADIUS}
-                  fill={current ? '#f59e42' : visited ? '#2563eb' : startNode === node.id ? '#f59e42' : '#60a5fa'}
-                  stroke="#1e40af"
+                  fill={current ? '#ff735b' : visited ? '#a896ff' : startNode === node.id ? '#ff735b' : '#211d3c'}
+                  stroke="#f7f1e7"
                   strokeWidth={current || startNode === node.id ? 4 : 2}
                 />
                 <text
@@ -308,8 +308,8 @@ export default function DijkstraVisualization() {
                       width={36}
                       height={22}
                       rx={6}
-                      fill="#fff"
-                      stroke="#f59e42"
+                      fill="#211d3c"
+                      stroke="#ff735b"
                       strokeWidth={2}
                     />
                     <text
@@ -317,7 +317,7 @@ export default function DijkstraVisualization() {
                       y={node.y - 29}
                       textAnchor="middle"
                       fontSize={14}
-                      fill="#f59e42"
+                      fill="#7df4c4"
                       fontWeight="bold"
                     >
                       {dist[node.id] === undefined ? "∞" : dist[node.id] === INF ? "∞" : dist[node.id]}
@@ -340,7 +340,7 @@ export default function DijkstraVisualization() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.25 }}
-                  className={`inline-block px-3 py-2 rounded bg-sky-400 text-white text-base font-bold border border-sky-600 shadow ${idx === 0 ? 'ring-2 ring-yellow-300' : ''}`}
+                  className={`inline-block px-3 py-2 rounded bg-blue-500 text-white text-base font-bold border border-blue-600 shadow ${idx === 0 ? 'ring-2 ring-yellow-300' : ''}`}
                 >
                   ({d === INF ? "∞" : d}, {id})
                   {idx === 0 && <span className="ml-1 text-xs">(min)</span>}
@@ -391,4 +391,4 @@ export default function DijkstraVisualization() {
       </CardContent>
     </Card>
   );
-} 
+}

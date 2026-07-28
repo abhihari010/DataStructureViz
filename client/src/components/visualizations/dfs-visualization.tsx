@@ -317,10 +317,10 @@ export default function DfsVisualization() {
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                stroke={isBacktrackEdge ? "#fbbf24" : traversed ? "#f59e42" : "#888"}
+                stroke={isBacktrackEdge ? "#ff735b" : traversed ? "#ff735b" : "#6c6592"}
                 strokeWidth={isBacktrackEdge ? 6 : traversed ? 5 : 3}
-                initial={{ stroke: "#888" }}
-                animate={{ stroke: isBacktrackEdge ? "#fbbf24" : traversed ? "#f59e42" : "#888", strokeWidth: isBacktrackEdge ? 6 : traversed ? 5 : 3 }}
+                initial={{ stroke: "#6c6592" }}
+                animate={{ stroke: isBacktrackEdge ? "#ff735b" : traversed ? "#ff735b" : "#6c6592", strokeWidth: isBacktrackEdge ? 6 : traversed ? 5 : 3 }}
                 transition={{ duration: 0.3 }}
               />
             );
@@ -347,12 +347,12 @@ export default function DfsVisualization() {
                   cx={node.x}
                   cy={node.y}
                   r={NODE_RADIUS}
-                  fill={isBacktrackNode ? '#fbbf24' : current ? '#f59e42' : visited ? '#2563eb' : isStart ? '#f59e42' : '#60a5fa'}
-                  stroke="#1e40af"
+                  fill={isBacktrackNode ? '#ff735b' : current ? '#ff735b' : visited ? '#a896ff' : isStart ? '#ff735b' : '#211d3c'}
+                  stroke="#f7f1e7"
                   strokeWidth={current || isStart ? 4 : 2}
                   initial={false}
                   animate={{
-                    fill: isBacktrackNode ? '#fbbf24' : current ? '#f59e42' : visited ? '#2563eb' : isStart ? '#f59e42' : '#60a5fa',
+                    fill: isBacktrackNode ? '#ff735b' : current ? '#ff735b' : visited ? '#a896ff' : isStart ? '#ff735b' : '#211d3c',
                     strokeWidth: current || isStart ? 4 : 2,
                   }}
                   transition={{ duration: 0.2 }}
@@ -362,7 +362,7 @@ export default function DfsVisualization() {
                   y={node.y + 5}
                   textAnchor="middle"
                   fontSize={18}
-                  fill="#fff"
+                  fill="#fff9f2"
                   fontWeight="bold"
                 >
                   {node.id}
@@ -395,4 +395,4 @@ export default function DfsVisualization() {
       </div>
     </Card>
   );
-} 
+}
