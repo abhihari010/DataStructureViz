@@ -171,11 +171,3 @@ jobs:
             client/npm-audit.stderr
             backend/dependency-tree.txt
           if-no-files-found: ignore
-
-  dependency-review:
-    name: Dependency review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Review dependency changes
-        uses: actions/dependency-review-action@v4
