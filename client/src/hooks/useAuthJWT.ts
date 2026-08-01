@@ -43,14 +43,10 @@ export function useAuthJWT() {
       try {
         const response = await auth.login(credentials);
         return response.data;
-      } catch (error: any) {
-        // Re-throw the error with the response data
-        const errorMessage =
-          error.response?.data?.message ||
-          "Login failed. Please check your credentials.";
-        const errorWithResponse = new Error(errorMessage);
-        (errorWithResponse as any).response = error.response;
-        throw errorWithResponse;
+      } catch (error) {
+        // Preserve Axios response data so the page can show the server's
+        // actionable auth message and verification metadata.
+        throw error;
       }
     },
     onMutate: () => {
