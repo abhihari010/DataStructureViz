@@ -99,6 +99,8 @@ DataStructureViz/
    DATABASE_USERNAME=your_db_user
    DATABASE_PASSWORD=your_db_password
    JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
+   JUDGE0_API_KEY=your_rapidapi_key
+   JUDGE0_API_HOST=judge0-ce.p.rapidapi.com
    JWT_SECRET=your_jwt_secret
    SUPPORT_EMAIL=your_email@gmail.com
    SUPPORT_EMAIL_PASSWORD=your_email_password
