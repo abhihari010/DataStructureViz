@@ -1,0 +1,24 @@
+name: Keep Render backend awake
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    env:
+      BACKEND_URL: https://datastructurevizbackend.onrender.com
+    steps:
+      - name: Ping backend health endpoint
+        run: |
+          curl --fail --silent --show-error \
+            --retry 3 \
+            --retry-delay 5 \
+            --max-time 30 \
+            "$BACKEND_URL/api/health"
