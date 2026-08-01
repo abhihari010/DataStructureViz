@@ -64,12 +64,12 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify",
                                 "/api/auth/resend-verification", "/api/forgot-password/**",
-                                "/api/problems/**", "/api/execute")
+                                "/api/health", "/api/problems/**", "/api/execute")
                         .permitAll()
 
                         .requestMatchers("/auth/register", "/auth/login", "/auth/verify",
                                 "/auth/resend-verification", "/forgot-password/**",
-                                "/problems/**", "/execute")
+                                "/health", "/problems/**", "/execute")
                         .permitAll()
 
                         .anyRequest().authenticated())
