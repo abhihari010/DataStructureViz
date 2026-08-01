@@ -4,6 +4,7 @@ package com.dsavisualizer.service;
 import com.dsavisualizer.dto.Judge0Result;
 import com.dsavisualizer.dto.Judge0SubmissionRequest;
 import com.dsavisualizer.dto.Judge0FailureType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class Judge0Service {
     private final WebClient webClient;
     private final Duration requestTimeout;
 
+    @Autowired
     public Judge0Service(
             WebClient.Builder webClientBuilder,
             @Value("${judge0.api.url}") String judge0ApiUrl,
