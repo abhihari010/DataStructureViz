@@ -27,7 +27,7 @@ export function useAuthJWT() {
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useQuery<User>({
-    queryKey: ["/api/auth/user"],
+    queryKey: ["/auth/user"],
     queryFn: async () => {
       const response = await auth.getCurrentUser();
       return response.data;
@@ -60,13 +60,13 @@ export function useAuthJWT() {
       localStorage.setItem("jwt_token", data.token);
       setToken(data.token);
       // Optimistically set the user in the React Query cache
-      queryClient.setQueryData(["/api/auth/user"], {
+      queryClient.setQueryData(["/auth/user"], {
         id: data.id,
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
 
       // Check for return URL in session storage
       const returnUrl = sessionStorage.getItem("returnUrl");
@@ -96,7 +96,7 @@ export function useAuthJWT() {
       setToken(result.token);
 
       // Update user data in cache
-      queryClient.setQueryData(["/api/auth/user"], {
+      queryClient.setQueryData(["/auth/user"], {
         id: result.id,
         email: result.email,
         firstName: result.firstName,
@@ -104,7 +104,7 @@ export function useAuthJWT() {
       });
 
       // Force a refetch to ensure we have fresh data
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      await queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
 
       // Handle navigation
       const returnUrl = sessionStorage.getItem("returnUrl");
@@ -131,7 +131,7 @@ export function useAuthJWT() {
     onSuccess: (data) => {
       localStorage.setItem("jwt_token", data.token);
       setToken(data.token);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
     },
   });
 

@@ -1,45 +1,93 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { useParams, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import Split from 'react-split';
 import './split-gutter.css';
 import ProblemDescription, { TestCase, TabType } from './ProblemDescription/problemdescription';
 import { Playground } from './Playground/playground';
 import TestCasesPanel from './TestCasesPanel/TestCasesPanel';
-import { executeCode as executeCodeApi, PracticeProblem, TestCaseResult } from '@/services/problemService';
-import SolutionPanel from '@/components/SolutionPanel/solution-panel';
-import { solutionsApi } from '@/lib/api';
+import { executeCode as executeCodeApi, submitSolutionApi, ExecutionRequestError, PracticeProblem, TestCaseResult } from '@/services/problemService';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
+import {
+  progressQueryKeys,
+  useProblemProgress,
+  useRecordProgressOutcome,
+  useSaveProgressDraft,
+} from '@/features/progress/progressHooks';
 
 interface WorkspaceProps {
   problem: PracticeProblem;
 }
 
+const MAX_DRAFT_CODE_LENGTH = 100_000;
+const ACTIVE_TIME_SAVE_INTERVAL_SECONDS = 15;
+
+function getBoilerplateCode(problem: PracticeProblem, language: string): string {
+  if (!problem.boilerPlateCode) {
+    return `// Write your ${language} code for ${problem.title} here`;
+  }
+  try {
+    const boilerplates = JSON.parse(problem.boilerPlateCode);
+    return boilerplates[language.toLowerCase()] || `// Write your ${language} code for ${problem.title} here`;
+  } catch (error) {
+    console.error('Failed to parse boilerplate code:', error);
+    return '// Error loading boilerplate.';
+  }
+}
+
 const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
   const queryClient = useQueryClient();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
+  const progressQuery = useProblemProgress(problem.id);
+  const saveDraftMutation = useSaveProgressDraft();
+  const recordOutcomeMutation = useRecordProgressOutcome();
   const [language, setLanguage] = useState<string>('javascript');
   const [code, setCode] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [executionError, setExecutionError] = useState<string>('');
   const [activeTab, setActiveTab] = useState<TabType>('problem');
-  const [showSolution, setShowSolution] = useState(false);
   const [testResults, setTestResults] = useState<Record<number, 
   { passed: boolean; output?: any; error?: string }>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionMessage, setSubmissionMessage] = useState<string>('');
   const [lastRuntime, setLastRuntime] = useState<number | undefined>(undefined);
   const [lastMemory, setLastMemory] = useState<number | undefined>(undefined);
+  const [lastReceiptId, setLastReceiptId] = useState<string | null>(null);
   const [activeCase, setActiveCase] = useState(0);
+  const [timeSpentSeconds, setTimeSpentSeconds] = useState(0);
+  const [draftStatus, setDraftStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [autosaveRevision, setAutosaveRevision] = useState(0);
   const playgroundRef = useRef<any>(null);
+  const hydratedProblemIdRef = useRef<number | null>(null);
+  const timeSpentRef = useRef(0);
+  const activeSinceRef = useRef<number | null>(null);
+  const lastTimeAutosaveRef = useRef(0);
+  const lastSavedDraftRef = useRef<string | null>(null);
 
   // Helper to get a unique key for localStorage per problem and language
   const getLocalStorageKey = (problemId: number, language: string) => `dsa_code_${problemId}_${language}`;
 
+  const recordAttempt = useCallback((status: string, resultStatus: string, runtime?: number, memory?: number) => {
+    recordOutcomeMutation.mutate({
+      problemId: problem.id,
+      input: {
+        status,
+        resultStatus,
+        language,
+        code: code.slice(0, MAX_DRAFT_CODE_LENGTH),
+        runtime,
+        memory,
+      },
+    });
+  }, [code, language, problem.id, recordOutcomeMutation]);
+
   const runAllTestCases = useCallback(async () => {
     setIsRunning(true);
     setTestResults({}); // Clear previous results
+    setExecutionError('');
     setLastRuntime(undefined);
     setLastMemory(undefined);
+    setLastReceiptId(null);
 
     try {
       const response = await executeCodeApi({
@@ -51,6 +99,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
       // Use overall runtime/memory if present in the response
       setLastRuntime((response as any).runtime);
       setLastMemory((response as any).memory);
+      setLastReceiptId(response.success ? response.receipt?.receipt_id ?? null : null);
 
       const arr: TestCaseResult[] = response.results ?? response.test_case_results ?? [];
       const newMap: typeof testResults = {};
@@ -64,45 +113,121 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
       setTestResults(newMap);
 
       if (!response.success) {
-        // Optionally, show a toast or global error as well
-        console.error('Execution Error:', response.error);
-        // You could add a toast here if you have a toast system
+        setExecutionError(response.message || response.error || 'Execution did not complete.');
+        recordAttempt(
+          response.status || 'FAILED',
+          response.failure_code || response.status || 'EXECUTION_FAILED',
+          response.runtime,
+          response.memory,
+        );
       }
+    } catch (error) {
+      const message = error instanceof ExecutionRequestError
+        ? error.message
+        : 'Execution failed. Please try again.';
+      setExecutionError(message);
     } finally {
       setIsRunning(false);
     }
-  }, [code, language, problem.id]);
+  }, [code, language, problem.id, recordAttempt]);
   
   useEffect(() => {
-    // Try to load code from localStorage first
-    const saved = localStorage.getItem(getLocalStorageKey(problem.id, language));
-    if (saved) {
-      setCode(saved);
-      return;
-    }
-    // Otherwise, load boilerplate
-    const getBoilerplate = () => {
-      if (!problem.boilerPlateCode) {
-        return `// Write your ${language} code for ${problem.title} here`;
-      }
-      try {
-        const boilerplates = JSON.parse(problem.boilerPlateCode);
-        return boilerplates[language.toLowerCase()] || `// Write your ${language} code for ${problem.title} here`;
-      } catch (e) {
-        console.error("Failed to parse boilerplate code:", e);
-        return "// Error loading boilerplate.";
-      }
-    };
-    setCode(getBoilerplate());
-  }, [problem, language]);
+    if (progressQuery.isLoading || hydratedProblemIdRef.current === problem.id) return;
 
-  // Save code to localStorage on every change
+    const savedLanguage = progressQuery.data?.draftLanguage || 'javascript';
+    const savedDraft = progressQuery.data?.draftCode;
+    const localDraft = localStorage.getItem(getLocalStorageKey(problem.id, savedLanguage));
+    const initialCode = savedDraft ?? localDraft ?? getBoilerplateCode(problem, savedLanguage);
+    const initialTime = progressQuery.data?.timeSpentSeconds ?? 0;
+
+    hydratedProblemIdRef.current = problem.id;
+    timeSpentRef.current = initialTime;
+    lastTimeAutosaveRef.current = initialTime;
+    setLanguage(savedLanguage);
+    setCode(initialCode);
+    setTimeSpentSeconds(initialTime);
+  }, [problem, progressQuery.data, progressQuery.isLoading]);
+
+  // Keep a local fallback while the bounded server draft is being persisted.
   useEffect(() => {
+    if (hydratedProblemIdRef.current !== problem.id) return;
     localStorage.setItem(getLocalStorageKey(problem.id, language), code);
   }, [code, problem.id, language]);
 
+  // Debounce bounded draft writes so typing does not create a request per keypress.
+  useEffect(() => {
+    if (hydratedProblemIdRef.current !== problem.id) return;
+    const boundedCode = code.slice(0, MAX_DRAFT_CODE_LENGTH);
+    const fingerprint = `${language}:${boundedCode}:${timeSpentRef.current}`;
+    if (fingerprint === lastSavedDraftRef.current) return;
+
+    const timer = window.setTimeout(() => {
+      setDraftStatus('saving');
+      saveDraftMutation.mutate(
+        {
+          problemId: problem.id,
+          input: {
+            draftCode: boundedCode,
+            draftLanguage: language,
+            timeSpentSeconds: Math.min(timeSpentRef.current, 604_800),
+          },
+        },
+        {
+          onSuccess: () => {
+            lastSavedDraftRef.current = fingerprint;
+            setDraftStatus('saved');
+          },
+          onError: () => setDraftStatus('error'),
+        },
+      );
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [autosaveRevision, code, language, problem.id, saveDraftMutation]);
+
+  // Count only visible time. A hidden tab pauses the clock and flushes one draft.
+  useEffect(() => {
+    if (hydratedProblemIdRef.current !== problem.id) return;
+
+    const updateActiveTime = (persist: boolean) => {
+      if (activeSinceRef.current === null) return;
+      const elapsed = Math.floor((Date.now() - activeSinceRef.current) / 1000);
+      if (elapsed <= 0) return;
+
+      const nextTime = Math.max(timeSpentRef.current, timeSpentRef.current + elapsed);
+      timeSpentRef.current = nextTime;
+      setTimeSpentSeconds(nextTime);
+      activeSinceRef.current = persist ? null : Date.now();
+
+      if (persist || nextTime - lastTimeAutosaveRef.current >= ACTIVE_TIME_SAVE_INTERVAL_SECONDS) {
+        lastTimeAutosaveRef.current = nextTime;
+        setAutosaveRevision((revision) => revision + 1);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        updateActiveTime(true);
+      } else if (activeSinceRef.current === null) {
+        activeSinceRef.current = Date.now();
+      }
+    };
+
+    activeSinceRef.current = document.hidden ? null : Date.now();
+    const interval = window.setInterval(() => {
+      if (!document.hidden) updateActiveTime(false);
+    }, 1_000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      updateActiveTime(true);
+    };
+  }, [problem.id]);
+
   const parsedTestCases = useMemo((): TestCase[] => {
-    const raw = problem?.testCases;
+    const raw = problem?.examples;
     if (!raw) return [];
   
     let arr: any[];
@@ -116,7 +241,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
     } else if (Array.isArray(raw)) {
       arr = raw;
     } else {
-      console.error("Unexpected testCases type:", typeof raw, raw);
+      console.error("Unexpected public examples type:", typeof raw, raw);
       return [];
     }
   
@@ -125,111 +250,20 @@ const Workspace: React.FC<WorkspaceProps> = ({ problem }) => {
       expected: tc.output,
       explanation: tc.explanation
     }));
-  }, [problem?.testCases]);
+  }, [problem?.examples]);
   
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
+    setLastReceiptId(null);
+    if (executionError) setExecutionError('');
   };
   
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
+    setLastReceiptId(null);
   };
 
   // Loading and error states are now handled by the parent ProblemPage component.
-
-  // Sample solution data - in a real app, this would come from your backend
-  const solutionExamples = {
-    javascript: {
-      code: `// JavaScript Solution
-function isValid(s) {
-  const stack = [];
-  const map = {
-    ')': '(',
-    '}': '{',
-    ']': '['
-  };
-  
-  for (let char of s) {
-    if (char in map) {
-      if (stack.pop() !== map[char]) {
-        return false;
-      }
-    } else {
-      stack.push(char);
-    }
-  }
-  
-  return stack.length === 0;
-}`,
-      timeComplexity: 'O(n)',
-      spaceComplexity: 'O(n)'
-    },
-    python: {
-      code: `# Python Solution
-def isValid(s: str) -> bool:
-    stack = []
-    mapping = {')': '(', '}': '{', ']': '['}
-    
-    for char in s:
-        if char in mapping:
-            top_element = stack.pop() if stack else '#'
-            if mapping[char] != top_element:
-                return False
-        else:
-            stack.append(char)
-    
-    return not stack`,
-      timeComplexity: 'O(n)',
-      spaceComplexity: 'O(n)'
-    },
-    java: {
-      code: `// Java Solution
-import java.util.Stack;
-
-class Solution {
-    public boolean isValid(String s) {
-        Stack<Character> stack = new Stack<>();
-        for (char c : s.toCharArray()) {
-            if (c == '(') stack.push(')');
-            else if (c == '{') stack.push('}');
-            else if (c == '[') stack.push(']');
-            else if (stack.isEmpty() || stack.pop() != c) return false;
-        }
-        return stack.isEmpty();
-    }
-}`,
-      timeComplexity: 'O(n)',
-      spaceComplexity: 'O(n)'
-    },
-    cpp: {
-      code: `// C++ Solution
-#include <stack>
-#include <unordered_map>
-
-class Solution {
-public:
-    bool isValid(std::string s) {
-        std::stack<char> stack;
-        std::unordered_map<char, char> mapping = {{')', '('}, {'}', '{'}, {']', '['}};
-        
-        for (char c : s) {
-            if (mapping.find(c) != mapping.end()) {
-                char top = stack.empty() ? '#' : stack.top();
-                stack.pop();
-                if (top != mapping[c]) {
-                    return false;
-                }
-            } else {
-                stack.push(c);
-            }
-        }
-        return stack.empty();
-    }
-};`,
-      timeComplexity: 'O(n)',
-      spaceComplexity: 'O(n)'
-    }
-  };
 
   // Handle tab change
   const handleTabChange = (tab: TabType) => {
@@ -243,7 +277,7 @@ public:
   const allPassed = totalCases > 0 && passedCases === totalCases;
 
   const handleSubmit = useCallback(async () => {
-    if (!allTestsRun || !allPassed) {
+    if (!allTestsRun || !allPassed || !lastReceiptId) {
       setSubmissionMessage('Please run and pass all test cases before submitting.');
       return;
     }
@@ -252,19 +286,22 @@ public:
     setSubmissionMessage('');
 
     try {
-      const response = await solutionsApi.saveSolution({
+      await submitSolutionApi({
         problemId: problem.id,
         code,
         language,
-        passed: true,
+        receiptId: lastReceiptId,
         runtime: lastRuntime,
         memory: lastMemory
       });
 
-      setSubmissionMessage('Solution submitted successfully! Problem marked as completed.');
+      setSubmissionMessage('Solution submitted successfully. Your server-verified progress will refresh shortly.');
       
       // Invalidate submissions query to refresh the submissions tab
       queryClient.invalidateQueries({ queryKey: ['userSolutions'] });
+      queryClient.invalidateQueries({ queryKey: progressQueryKeys.problem(problem.id) });
+      queryClient.invalidateQueries({ queryKey: progressQueryKeys.problems() });
+      queryClient.invalidateQueries({ queryKey: progressQueryKeys.summary() });
       
       // Optionally refresh the page or update UI to show completion
       setTimeout(() => {
@@ -277,7 +314,7 @@ public:
     } finally {
       setIsSubmitting(false);
     }
-  }, [allTestsRun, allPassed, problem.id, code, language, lastRuntime, lastMemory, queryClient]);
+  }, [allTestsRun, allPassed, lastReceiptId, problem.id, code, language, lastRuntime, lastMemory, queryClient]);
 
   return (
     <div className="app-coding-workspace flex flex-col bg-[#1e1e1e]">
@@ -286,13 +323,19 @@ public:
           {/* Left pane: problem text and solutions */}
           <div className="flex flex-col h-full overflow-hidden">
             <div className="app-coding-back flex items-center px-4 py-2 border-b border-gray-700 bg-gray-800/50">
-              <button 
+              <button
                 onClick={() => setLocation("/practice")}
                 className="text-gray-300 hover:text-white flex items-center text-sm"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to practice
               </button>
+              <div className="ml-auto flex items-center gap-3 text-xs text-gray-400" aria-live="polite">
+                <span>{Math.floor(timeSpentSeconds / 60)}m active</span>
+                {draftStatus === 'saving' && <span>Saving draft…</span>}
+                {draftStatus === 'saved' && <span className="text-green-400">Draft saved</span>}
+                {draftStatus === 'error' && <span className="text-red-400">Draft could not be saved</span>}
+              </div>
             </div>
             
             {/* Content Area */}
@@ -303,10 +346,10 @@ public:
                 problemStatement={problem.description}
                 examples={parsedTestCases.slice(0, 2).map((tc, idx) => ({
                   id: idx + 1,
-                  input: JSON.stringify(tc.input),
-                  output: typeof tc.expected === 'object'
-                    ? (tc.expected[language] ?? tc.expected['python'] ?? Object.values(tc.expected)[0])
-                    : String(tc.expected),
+                  input: typeof tc.input === 'string' ? tc.input : JSON.stringify(tc.input),
+                  output: typeof tc.expected === 'string'
+                    ? tc.expected
+                    : JSON.stringify(tc.expected),
                   explanation: tc.explanation,
                 }))}
                 constraints={Array.isArray(problem.constraints) && typeof problem.constraints[0] === 'object' ? problem.constraints.map((c: any) => c.constraint) : (problem.constraints || [])}
@@ -344,11 +387,12 @@ public:
                   code={code}
                   language={language}
                   isRunning={isRunning}
-                  onCodeChange={setCode}
-                  onLanguageChange={setLanguage}
+                  executionError={executionError}
+                  onCodeChange={handleCodeChange}
+                  onLanguageChange={handleLanguageChange}
                   onRunTests={runAllTestCases}
                   onSubmit={handleSubmit}
-                  canSubmit={allTestsRun && allPassed}
+                  canSubmit={allTestsRun && allPassed && !!lastReceiptId}
                   isSubmitting={isSubmitting}
                 />
               </div>

@@ -18,7 +18,7 @@ import { Link } from "wouter";
 import AppShell from "@/components/app-shell";
 import Reveal from "@/components/reveal";
 import { progressApi } from "@/lib/api";
-import type { UserProgress } from "@shared/schema";
+import type { UserProgress } from "@/lib/api";
 
 const topics = [
   { id: "stack", name: "Stack", type: "Structure", difficulty: "Beginner", time: 20, path: "/topics/stack", icon: Layers, note: "Push, pop, and inspect the top value." },
@@ -41,7 +41,7 @@ export default function TopicsPage() {
     initialFilter === "Structure" || initialFilter === "Algorithm" ? initialFilter : "All",
   );
   const { data: progress = [], isLoading } = useQuery<UserProgress[]>({
-    queryKey: ["/api/progress"],
+    queryKey: ["/progress"],
     queryFn: progressApi.getUserProgress,
   });
   const progressByTopic = new Map(progress.map((item) => [item.topicId, item]));

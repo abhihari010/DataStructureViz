@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +57,10 @@ public class PracticeProblemDataInitializer {
                             (String)p.get("topic")
                         );
                         problem.setMethodName((String)p.get("methodName"));
-                        problem.setTestCases((List<Map<String, Object>>)p.get("testCases"));
+                        List<Map<String, Object>> testCases = (List<Map<String, Object>>) p.get("testCases");
+                        problem.setTestCases(testCases);
+                        problem.setExamples(publicExamples(p, testCases));
+                        problem.setTestSetVersion(String.valueOf(p.getOrDefault("testSetVersion", "v1")));
 
                         // Handle method signature
                         Object methodSigObj = p.get("methodSignature");
@@ -110,4 +115,45 @@ public class PracticeProblemDataInitializer {
             throw e;
         }
     }
-} 
+
+    private List<Map<String, Object>> publicExamples(Map<String, Object> problem,
+                                                     List<Map<String, Object>> evaluationCases) throws Exception {
+        Object configured = problem.get("examples");
+        if (configured instanceof List<?> examples) {
+            List<Map<String, Object>> safe = new ArrayList<>();
+            for (Object example : examples) {
+                if (example instanceof Map<?, ?> map) {
+                    safe.add(normalizeExample(map));
+                }
+            }
+            return safe;
+        }
+
+        if (evaluationCases == null) return Collections.emptyList();
+        return evaluationCases.stream().limit(2).map(example -> {
+            try {
+                return normalizeExample(example);
+            } catch (Exception exception) {
+                throw new IllegalStateException("Unable to create public problem example", exception);
+            }
+        }).toList();
+    }
+
+    private Map<String, Object> normalizeExample(Map<?, ?> source) throws Exception {
+        Map<String, Object> safe = new LinkedHashMap<>();
+        Object input = source.containsKey("input") ? source.get("input") : source.get("inputArgs");
+        Object output = source.get("output");
+        if (output instanceof Map<?, ?> outputByLanguage) {
+            output = outputByLanguage.values().stream().findFirst().orElse(null);
+        }
+        safe.put("input", stringify(input));
+        safe.put("output", stringify(output));
+        if (source.get("explanation") != null) safe.put("explanation", source.get("explanation"));
+        return safe;
+    }
+
+    private String stringify(Object value) throws Exception {
+        if (value == null) return "";
+        return value instanceof String ? (String) value : objectMapper.writeValueAsString(value);
+    }
+}

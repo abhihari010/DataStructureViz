@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { Solution } from "@/services/problemService";
+
+interface Solution {
+  code: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
+}
 
 // Simple code block component with syntax highlighting
 const CodeBlock = ({ 

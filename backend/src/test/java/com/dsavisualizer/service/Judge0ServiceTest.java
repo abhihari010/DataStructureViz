@@ -1,6 +1,7 @@
 package com.dsavisualizer.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.dsavisualizer.dto.Judge0Result;
 import com.dsavisualizer.dto.Judge0SubmissionRequest;
@@ -75,5 +76,50 @@ class Judge0ServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.status().id()).isEqualTo(3);
         assertThat(result.stdout()).isEqualTo("42\n");
+    }
+
+    @Test
+    void providerQuotaIsTypedAndDoesNotExposeProviderResponseBody() {
+        server.createContext("/submissions", exchange -> {
+            byte[] response = "provider-secret-and-rapidapi-key".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(429, response.length);
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write(response);
+            }
+        });
+
+        Judge0Service service = service(Duration.ofSeconds(5));
+
+        assertThatThrownBy(() -> service.submitAndWait(new Judge0SubmissionRequest("print(42)", 71, ""))
+                .block(Duration.ofSeconds(2)))
+                .isInstanceOf(Judge0ProviderException.class)
+                .satisfies(error -> assertThat(((Judge0ProviderException) error).getFailureType())
+                        .isEqualTo(com.dsavisualizer.dto.Judge0FailureType.QUOTA))
+                .hasMessage("QUOTA");
+    }
+
+    @Test
+    void providerTimeoutIsBoundedAndTyped() {
+        server.createContext("/submissions", exchange -> {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        });
+
+        Judge0Service service = service(Duration.ofMillis(40));
+
+        assertThatThrownBy(() -> service.submitAndWait(new Judge0SubmissionRequest("print(42)", 71, ""))
+                .block(Duration.ofSeconds(2)))
+                .isInstanceOf(Judge0ProviderException.class)
+                .satisfies(error -> assertThat(((Judge0ProviderException) error).getFailureType())
+                        .isEqualTo(com.dsavisualizer.dto.Judge0FailureType.TIMEOUT));
+    }
+
+    private Judge0Service service(Duration timeout) {
+        String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
+        return new Judge0Service(WebClient.builder(), baseUrl, "test-rapid-api-key",
+                "judge0-ce.p.rapidapi.com", timeout);
     }
 }

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, ArrowLeft, Lock } from "lucide-react";
-import axios from "axios";
+import { getApiErrorMessage, passwordReset } from "@/lib/api";
 
 type ResetPasswordFormData = {
   password: string;
@@ -21,6 +21,7 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [resetProof, setResetProof] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -42,6 +43,12 @@ export default function ResetPassword() {
       return;
     }
     setEmail(decodeURIComponent(emailParam));
+    const proof = sessionStorage.getItem("passwordResetProof");
+    if (!proof) {
+      setLocation(`/verify-otp?email=${encodeURIComponent(emailParam)}`);
+      return;
+    }
+    setResetProof(proof);
   }, [location, setLocation]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
@@ -54,10 +61,12 @@ export default function ResetPassword() {
     setError(null);
 
     try {
-      await axios.post(`/api/forgot-password/changePassword/${email}`, {
+      await passwordReset.reset(email, {
         password: data.password,
-        repeatPassword: data.repeatPassword
+        repeatPassword: data.repeatPassword,
+        resetProof,
       });
+      sessionStorage.removeItem("passwordResetProof");
       
       toast({
         title: "Password Reset Successful",
@@ -67,8 +76,7 @@ export default function ResetPassword() {
       // Redirect to login after successful password reset
       setLocation('/login');
     } catch (err: any) {
-      console.error('Password reset failed:', err);
-      const errorMessage = err.response?.data || 'Failed to reset password. Please try again.';
+      const errorMessage = getApiErrorMessage(err, 'Failed to reset password. Please try again.');
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -83,7 +91,7 @@ export default function ResetPassword() {
             variant="ghost"
             size="sm"
             className="w-fit p-0 mb-2"
-            onClick={() => setLocation('/verify-otp')}
+            onClick={() => setLocation(`/verify-otp?email=${encodeURIComponent(email)}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>

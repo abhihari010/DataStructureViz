@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, ArrowLeft, Lock } from "lucide-react";
-import axios from "axios";
+import { getApiErrorMessage, passwordReset } from "@/lib/api";
 
 export default function VerifyOtp() {
   const [location, setLocation] = useLocation();
@@ -46,11 +46,10 @@ export default function VerifyOtp() {
     setIsLoading(true);
     setError(null);
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
     try {
-      await axios.post(`${apiBase}/forgot-password/verifyOtp/${otp}/${email}`);
+      const response = await passwordReset.verifyOtp(email, otp);
+      sessionStorage.setItem("passwordResetProof", response.data.resetProof);
       
-      // Navigate to reset password page with email as URL parameter
       setLocation(`/reset-password?email=${encodeURIComponent(email)}`);
       
       toast({
@@ -58,8 +57,7 @@ export default function VerifyOtp() {
         description: "Please set your new password.",
       });
     } catch (err: any) {
-      console.error('OTP verification failed:', err);
-      const errorMessage = err.response?.data || 'Invalid or expired OTP. Please try again.';
+      const errorMessage = getApiErrorMessage(err, 'Invalid or expired OTP. Please try again.');
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -69,17 +67,15 @@ export default function VerifyOtp() {
   const handleResendOtp = async () => {
     if (resendTime > 0) return;
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
     try {
-      await axios.post(`${apiBase}/forgot-password/sendMail/${email}`);
+      await passwordReset.request(email);
       setResendTime(60);
       toast({
         title: "OTP Resent",
         description: "A new OTP has been sent to your email.",
       });
     } catch (err) {
-      console.error('Failed to resend OTP:', err);
-      setError("Failed to resend OTP. Please try again.");
+      setError(getApiErrorMessage(err, "Failed to resend OTP. Please try again."));
     }
   };
 

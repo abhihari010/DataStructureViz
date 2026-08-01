@@ -18,7 +18,7 @@ type PracticeSectionProps = {
 
 export default function PracticeSection({ topicId }: PracticeSectionProps) {
   const { data: problems, isLoading } = useQuery<PracticeProblem[]>({
-    queryKey: ["/api/problems", topicId],
+    queryKey: ["/problems", topicId],
     queryFn: () => problemsApi.getProblems(topicId),
   });
   const { keyConcepts, nextSteps } = getTopicConfig(topicId);

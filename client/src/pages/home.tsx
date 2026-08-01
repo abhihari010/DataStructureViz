@@ -1,44 +1,68 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check, Clock3, Play, Route, TimerReset } from "lucide-react";
+import { ArrowRight, Check, Clock3, Play, TimerReset } from "lucide-react";
 import { Link } from "wouter";
 import AppShell from "@/components/app-shell";
 import CountUp from "@/components/count-up";
 import Reveal from "@/components/reveal";
+import {
+  useProgressProblems,
+  useProgressSolutions,
+  useProgressSummary,
+} from "@/features/progress/progressHooks";
+import {
+  formatLastAttempt,
+  formatRuntime,
+  formatTimeSpent,
+  getLearnerProblemStatus,
+  getStatusLabel,
+} from "@/features/progress/progressPresentation";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
-import { progressApi, type User } from "@/lib/api";
-import type { UserProgress } from "@shared/schema";
-
-const learningPath = [
-  { id: "stack", name: "Stack", group: "Structure", path: "/topics/stack", duration: 20 },
-  { id: "queue", name: "Queue", group: "Structure", path: "/topics/queue", duration: 20 },
-  { id: "linked-list", name: "Linked list", group: "Structure", path: "/topics/linked-list", duration: 30 },
-  { id: "binary-tree", name: "Binary tree", group: "Structure", path: "/topics/binary-tree", duration: 45 },
-  { id: "graph", name: "Graph", group: "Structure", path: "/topics/graph", duration: 60 },
-  { id: "bubble-sort", name: "Bubble sort", group: "Algorithm", path: "/bubble-sort", duration: 25 },
-  { id: "quick-sort", name: "Quick sort", group: "Algorithm", path: "/quick-sort", duration: 35 },
-  { id: "bfs", name: "Breadth-first search", group: "Algorithm", path: "/bfs", duration: 35 },
-  { id: "dfs", name: "Depth-first search", group: "Algorithm", path: "/dfs", duration: 35 },
-  { id: "dijkstra", name: "Dijkstra", group: "Algorithm", path: "/dijkstra", duration: 50 },
-];
+import { getAllProblems, type PracticeProblem } from "@/services/problemService";
 
 export default function Home() {
   const { user } = useAuthJWT();
-  const typedUser = user as User | null;
-  const { data: progress = [], isLoading } = useQuery<UserProgress[]>({
-    queryKey: ["/api/progress"],
-    queryFn: progressApi.getUserProgress,
+  const problemsQuery = useQuery<PracticeProblem[]>({
+    queryKey: ["allProblems"],
+    queryFn: getAllProblems,
   });
-
-  const progressByTopic = new Map(progress.map((item) => [item.topicId, item]));
-  const completedCount = learningPath.filter(
-    (topic) => progressByTopic.get(topic.id)?.completed,
-  ).length;
-  const totalTime = progress.reduce((sum, item) => sum + (item.timeSpent || 0), 0);
-  const nextTopic =
-    learningPath.find((topic) => !progressByTopic.get(topic.id)?.completed) ||
-    learningPath[0];
-  const activeProgress = progressByTopic.get(nextTopic.id);
-  const percent = completedCount * 10;
+  const progressQuery = useProgressProblems();
+  const summaryQuery = useProgressSummary();
+  const solutionsQuery = useProgressSolutions();
+  const progressByProblemId = useMemo(
+    () => new Map((progressQuery.data || []).map((item) => [item.problemId, item])),
+    [progressQuery.data],
+  );
+  const problems = problemsQuery.data || [];
+  const trackedProblems = useMemo(
+    () => problems.map((problem) => ({
+      problem,
+      progress: progressByProblemId.get(problem.id),
+      status: getLearnerProblemStatus(progressByProblemId.get(problem.id), solutionsQuery.data),
+    })),
+    [problems, progressByProblemId, solutionsQuery.data],
+  );
+  const solvedCount = trackedProblems.filter((item) => item.status === "solved").length;
+  const totalProblems = summaryQuery.data?.totalProblems || problems.length;
+  const percent = totalProblems ? Math.round((solvedCount / totalProblems) * 100) : 0;
+  const totalTime = (progressQuery.data || []).reduce(
+    (sum, item) => sum + (item.timeSpentSeconds || 0),
+    0,
+  );
+  const continueItem = trackedProblems.find(
+    (item) => item.status === "in-progress" || item.status === "attempted",
+  ) || trackedProblems.find((item) => item.status !== "solved");
+  const visibleItems = trackedProblems
+    .filter((item) => item.status !== "not-started" || item.progress)
+    .sort((left, right) => {
+      const leftTime = left.progress?.lastAttemptAt || left.progress?.updatedAt || "";
+      const rightTime = right.progress?.lastAttemptAt || right.progress?.updatedAt || "";
+      return rightTime.localeCompare(leftTime);
+    })
+    .slice(0, 12);
+  const isLoading = problemsQuery.isLoading || progressQuery.isLoading || summaryQuery.isLoading || solutionsQuery.isLoading;
+  const error = problemsQuery.error || progressQuery.error || summaryQuery.error || solutionsQuery.error;
+  const firstName = (user as { firstName?: string } | null)?.firstName || "learner";
 
   return (
     <AppShell>
@@ -46,101 +70,113 @@ export default function Home() {
         <header className="app-dashboard-hero">
           <div>
             <span className="app-kicker">Your execution ledger</span>
-            <h1>
-              Keep going,
-              <br />
-              {typedUser?.firstName || "learner"}.
-            </h1>
+            <h1>Keep going,<br />{firstName}.</h1>
             <p>
-              Return to the next unresolved structure, or jump directly to any
-              point in the learning path.
+              Return to a saved draft, inspect the latest result, or pick the next
+              unresolved problem from your practice path.
             </p>
           </div>
 
-          <div className="app-dashboard-progress" aria-label={`${percent}% complete`}>
-            <span>Path resolved</span>
+          <div className="app-dashboard-progress" aria-label={`${percent}% practice complete`}>
+            <span>Practice resolved</span>
             <strong><CountUp value={percent} suffix="%" pad={2} /></strong>
             <div className="app-dashboard-progress-track">
               <i style={{ transform: `scaleX(${percent / 100})` }} />
             </div>
-            <small>{completedCount} of {learningPath.length} topics complete</small>
+            <small>{solvedCount} of {totalProblems || "—"} problems solved</small>
             <div className="app-ambient-trace" aria-hidden="true"><i /></div>
-            <div className="app-progress-caption"><span>10 topics</span><span>one visible state at a time</span></div>
+            <div className="app-progress-caption"><span>{summaryQuery.data?.totalAttempts || 0} attempts</span><span>server-verified activity</span></div>
           </div>
         </header>
 
-        <Reveal>
-        <section className="app-continue-band">
-          <div className="app-continue-copy">
-            <span className="app-kicker">Continue from here</span>
-            <h2>{nextTopic.name}</h2>
-            <p>
-              {activeProgress?.timeSpent
-                ? "Your previous state is recorded. Reopen the visualization and continue."
-                : "Open the visualization, move the state, and connect each operation to the code."}
-            </p>
+        {isLoading ? (
+          <div className="app-inline-state" role="status">Loading your progress ledger…</div>
+        ) : error ? (
+          <div className="app-inline-state app-inline-state-error" role="alert">
+            Your progress could not be loaded. Refresh and try again.
           </div>
-          <div className="app-continue-meta">
-            <span><Clock3 aria-hidden="true" /> {nextTopic.duration} min</span>
-            <span><Route aria-hidden="true" /> {nextTopic.group}</span>
-          </div>
-          <Link className="app-primary-command" href={nextTopic.path}>
-            <Play aria-hidden="true" />
-            Open {nextTopic.name}
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </section>
-        </Reveal>
-
-        <Reveal className="app-dashboard-ledger">
-          <div className="app-ledger-heading">
-            <div>
-              <span className="app-kicker">Full learning path</span>
-              <h2>Every structure in sequence</h2>
-            </div>
-            <div className="app-ledger-totals">
-              <span><Check aria-hidden="true" /> {completedCount} complete</span>
-              <span><TimerReset aria-hidden="true" /> {Math.round(totalTime / 60)} min recorded</span>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="app-inline-state" role="status">Loading your learning path…</div>
-          ) : (
-            <ol className="app-learning-ledger">
-              {learningPath.map((topic, index) => {
-                const topicProgress = progressByTopic.get(topic.id);
-                const completed = Boolean(topicProgress?.completed);
-                const started = Boolean(topicProgress?.timeSpent);
-
-                return (
-                  <li key={topic.id}>
-                    <Link href={topic.path}>
-                      <span className="app-learning-ledger-index">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <div>
-                        <strong>{topic.name}</strong>
-                        <small>{topic.group}</small>
-                      </div>
-                      <span className="app-learning-ledger-time">
-                        {topic.duration} min
-                      </span>
-                      <span
-                        className={`app-learning-ledger-state ${
-                          completed ? "is-complete" : started ? "is-active" : ""
-                        }`}
-                      >
-                        {completed ? "Resolved" : started ? "In progress" : "Not started"}
-                      </span>
+        ) : (
+          <>
+            <Reveal>
+              <section className="app-continue-band">
+                <div className="app-continue-copy">
+                  <span className="app-kicker">Continue from here</span>
+                  <h2>{continueItem?.problem.title || "Practice ledger"}</h2>
+                  <p>
+                    {continueItem?.status === "in-progress"
+                      ? "Your draft and active time are saved. Resume where you left off."
+                      : continueItem?.status === "attempted"
+                        ? "Review your latest attempt and keep working toward a trusted submission."
+                        : "Choose a problem to start building persisted practice evidence."}
+                  </p>
+                </div>
+                {continueItem ? (
+                  <>
+                    <div className="app-continue-meta">
+                      <span><Clock3 aria-hidden="true" /> {formatTimeSpent(continueItem.progress?.timeSpentSeconds)} recorded</span>
+                      <span><TimerReset aria-hidden="true" /> {getStatusLabel(continueItem.status)}</span>
+                    </div>
+                    <Link className="app-primary-command" href={`/problems/${continueItem.problem.id}`}>
+                      <Play aria-hidden="true" />
+                      {continueItem.status === "in-progress" || continueItem.status === "attempted" ? "Resume problem" : "Start practice"}
                       <ArrowRight aria-hidden="true" />
                     </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-        </Reveal>
+                  </>
+                ) : (
+                  <Link className="app-primary-command" href="/practice">
+                    <Play aria-hidden="true" /> Browse practice <ArrowRight aria-hidden="true" />
+                  </Link>
+                )}
+              </section>
+            </Reveal>
+
+            <Reveal className="app-dashboard-ledger">
+              <div className="app-ledger-heading">
+                <div>
+                  <span className="app-kicker">Recent practice</span>
+                  <h2>Every result leaves a trace.</h2>
+                </div>
+                <div className="app-ledger-totals">
+                  <span><Check aria-hidden="true" /> {solvedCount} solved</span>
+                  <span><TimerReset aria-hidden="true" /> {formatTimeSpent(totalTime)} recorded</span>
+                </div>
+              </div>
+
+              {visibleItems.length > 0 ? (
+                <ol className="app-learning-ledger">
+                  {visibleItems.map(({ problem, progress, status }, index) => {
+                    const solution = solutionsQuery.data?.find(
+                      (item) => item.problemId === problem.id && item.passed,
+                    );
+                    const runtime = progress?.bestRuntime ?? solution?.runtime;
+                    const resultStatus = progress?.bestResultStatus || (solution ? "ACCEPTED" : null);
+                    const language = progress?.bestLanguage || solution?.language;
+                    return (
+                      <li key={problem.id}>
+                        <Link href={`/problems/${problem.id}`}>
+                          <span className="app-learning-ledger-index">{String(index + 1).padStart(2, "0")}</span>
+                          <div>
+                            <strong>{problem.title}</strong>
+                            <small>{problem.difficulty} · {formatLastAttempt(progress?.lastAttemptAt || solution?.submittedAt)}</small>
+                          </div>
+                          <span className="app-learning-ledger-time">{resultStatus || "—"} · {language || "—"}</span>
+                          <span className={`app-learning-ledger-state is-${status}`}>
+                            {getStatusLabel(status)} · {formatRuntime(runtime)}
+                          </span>
+                          <ArrowRight aria-hidden="true" />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <div className="app-inline-state">
+                  No problem activity yet. Open the practice ledger to begin.
+                </div>
+              )}
+            </Reveal>
+          </>
+        )}
       </div>
     </AppShell>
   );

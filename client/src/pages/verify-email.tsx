@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail } from "lucide-react";
+import { auth } from "@/lib/api";
 
 export default function VerifyEmail() {
   const [, setLocation] = useLocation();
@@ -32,13 +33,8 @@ export default function VerifyEmail() {
   const verifyEmail = async (token: string) => {
     setIsVerifying(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-      const response = await fetch(`${apiBase}/auth/verify?token=${token}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Verification failed");
-      }
+      const response = await auth.verifyEmail(token);
+      const data = response.data;
 
       setIsSuccess(true);
       toast({
@@ -73,18 +69,8 @@ export default function VerifyEmail() {
 
     setIsResending(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-      const response = await fetch(
-        `${apiBase}/auth/resend-verification?email=${encodeURIComponent(email)}`,
-        {
-          method: "POST",
-        }
-      );
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Could not resend verification email");
-      }
+      const response = await auth.resendVerification(email);
+      const data = response.data;
 
       toast({
         title: "Success!",
@@ -195,4 +181,4 @@ export default function VerifyEmail() {
       </Card>
     </div>
   );
-} 
+}
