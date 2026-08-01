@@ -3,7 +3,7 @@ package com.dsavisualizer.config;
 import com.dsavisualizer.security.JwtAuthenticationFilter;
 import com.dsavisualizer.security.JwtUtil;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -62,15 +62,20 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        .requestMatchers("/health", "/health/readiness", "/api/health", "/api/health/readiness")
+                        .permitAll()
+
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/verify",
                                 "/api/auth/resend-verification", "/api/forgot-password/**",
-                                "/api/problems/**", "/api/execute")
+                                "/api/problems/**")
                         .permitAll()
 
                         .requestMatchers("/auth/register", "/auth/login", "/auth/verify",
                                 "/auth/resend-verification", "/forgot-password/**",
-                                "/problems/**", "/execute")
+                                "/problems/**")
                         .permitAll()
+
+                        .requestMatchers("/execute").authenticated()
 
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
@@ -85,11 +90,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         String frontendUrl = System.getenv("FRONTEND_URL");
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList(
+        List<String> allowedOrigins = new ArrayList<>(List.of(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                frontendUrl));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                "http://127.0.0.1:5173"));
+        if (frontendUrl != null && !frontendUrl.isBlank()) {
+            allowedOrigins.add(frontendUrl.trim());
+        }
+        configuration.setAllowedOriginPatterns(allowedOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 

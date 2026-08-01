@@ -1,6 +1,7 @@
 package com.dsavisualizer.entity;
 
 import com.dsavisualizer.dto.MethodSignature;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
@@ -32,22 +33,34 @@ public class PracticeProblem {
 
     @Type(JsonType.class)
     @Column(name = "test_cases", columnDefinition = "jsonb")
+    @JsonIgnore
     private List<Map<String, Object>> testCases;
 
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
+    @JsonIgnore
     private Map<String, Map<String, String>> solutions; // Key: language, Value: { code: string, timeComplexity: string, spaceComplexity: string }
 
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
+    @JsonIgnore
     private Map<String, String> timeComplexity; // Key: language, Value: time complexity
 
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
+    @JsonIgnore
     private Map<String, String> spaceComplexity; // Key: language, Value: space complexity
 
     @Column(columnDefinition = "TEXT")
+    @JsonIgnore
     private String solution;
+
+    @Type(JsonType.class)
+    @Column(name = "examples", columnDefinition = "jsonb")
+    private List<Map<String, Object>> examples;
+
+    @Column(name = "test_set_version")
+    private String testSetVersion = "v1";
 
     @Column(columnDefinition = "TEXT")
     private String boilerPlateCode;
@@ -94,10 +107,11 @@ public class PracticeProblem {
     public String getTopicId() { return topicId; }
     public void setTopicId(String topicId) { this.topicId = topicId; }
 
-    @JsonProperty("testCases")
+    @JsonIgnore
     public List<Map<String, Object>> getTestCases() { return testCases; }
     public void setTestCases(List<Map<String, Object>> testCases) { this.testCases = testCases; }
 
+    @JsonIgnore
     public String getSolution() { return solution; }
     public void setSolution(String solution) { this.solution = solution; }
 
@@ -105,7 +119,6 @@ public class PracticeProblem {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    @JsonProperty("boilerPlateCode")
     public String getBoilerPlateCode() {
         return boilerPlateCode;
     }
@@ -131,15 +144,22 @@ public class PracticeProblem {
         this.methodSignature = methodSignature;
     }
 
-    @JsonProperty("solutions")
+    @JsonIgnore
     public Map<String, Map<String, String>> getSolutions() { return solutions; }
     public void setSolutions(Map<String, Map<String, String>> solutions) { this.solutions = solutions; }
 
-    @JsonProperty("timeComplexity")
+    @JsonIgnore
     public Map<String, String> getTimeComplexity() { return timeComplexity; }
     public void setTimeComplexity(Map<String, String> timeComplexity) { this.timeComplexity = timeComplexity; }
 
-    @JsonProperty("spaceComplexity")
+    @JsonIgnore
     public Map<String, String> getSpaceComplexity() { return spaceComplexity; }
     public void setSpaceComplexity(Map<String, String> spaceComplexity) { this.spaceComplexity = spaceComplexity; }
+
+    public List<Map<String, Object>> getExamples() { return examples; }
+    public void setExamples(List<Map<String, Object>> examples) { this.examples = examples; }
+
+    @JsonIgnore
+    public String getTestSetVersion() { return testSetVersion; }
+    public void setTestSetVersion(String testSetVersion) { this.testSetVersion = testSetVersion; }
 }

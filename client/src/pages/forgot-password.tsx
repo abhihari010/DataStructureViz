@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, ArrowLeft, Mail, LayoutDashboard } from "lucide-react";
-import axios from "axios";
+import { getApiErrorMessage, passwordReset } from "@/lib/api";
 
 type ForgotPasswordFormData = {
   email: string;
@@ -30,26 +30,17 @@ export default function ForgotPassword() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setError(null);
     setIsLoading(true);
+    sessionStorage.removeItem("passwordResetProof");
     
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-      // Make a POST request with proper headers
-      await axios.post(
-        `${apiBase}/forgot-password/sendMail/${encodeURIComponent(data.email)}`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      await passwordReset.request(data.email.trim());
       
       // Show success message and set submitted state
       setIsSubmitted(true);
       
       toast({
         title: "OTP Sent",
-        description: "We've sent a 6-digit OTP to your email address.",
+              description: "If an account exists, a 6-digit OTP will arrive shortly.",
       });
       
       // Navigate to OTP verification page with email as URL parameter after a short delay
@@ -57,8 +48,7 @@ export default function ForgotPassword() {
         setLocation(`/verify-otp?email=${encodeURIComponent(data.email)}`);
       }, 2000);
     } catch (err: any) {
-      console.error('OTP request failed:', err);
-      const errorMessage = err.response?.data || 'Failed to send OTP. Please try again.';
+      const errorMessage = getApiErrorMessage(err, 'Unable to process that request. Please try again.');
       setError(errorMessage);
       toast({
         variant: "destructive",
@@ -84,7 +74,7 @@ export default function ForgotPassword() {
             </div>
             <CardTitle className="text-2xl">Check your email</CardTitle>
             <CardDescription className="text-center">
-              We've sent a password reset link to your email address.
+              If an account exists, check your email for the reset code.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">

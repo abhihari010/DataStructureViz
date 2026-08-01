@@ -1,10 +1,15 @@
 package com.dsavisualizer.controller;
 
 import com.dsavisualizer.dto.ChangePasswordRequest;
+import com.dsavisualizer.dto.ApiError;
 import com.dsavisualizer.dto.LoginRequest;
+import com.dsavisualizer.dto.MessageResponse;
+import com.dsavisualizer.dto.ProfileUpdateRequest;
 import com.dsavisualizer.dto.RegisterRequest;
+import com.dsavisualizer.dto.UserResponse;
 import com.dsavisualizer.entity.User;
 import com.dsavisualizer.security.JwtUtil;
+import com.dsavisualizer.service.EmailVerificationRequiredException;
 import com.dsavisualizer.service.UserService;
 import com.dsavisualizer.service.VerificationTokenService;
 import jakarta.validation.Valid;
@@ -129,17 +134,29 @@ public class AuthController {
     @GetMapping("/user")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiError("UNAUTHENTICATED", "Authentication required"));
         }
         User user = (User) authentication.getPrincipal();
-        // Return the user info needed by your frontend
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("firstName", user.getFirstName());
-        response.put("lastName", user.getLastName());
-        // Add any other fields you want to expose
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody ProfileUpdateRequest request,
+                                            Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiError("UNAUTHENTICATED", "Authentication required"));
+        }
+
+        try {
+            User updatedUser = userService.updateProfile((User) authentication.getPrincipal(), request);
+            return ResponseEntity.ok(UserResponse.from(updatedUser));
+        } catch (EmailVerificationRequiredException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiError("EMAIL_VERIFICATION_REQUIRED",
+                            "Email changes require verification before they can be applied."));
+        }
     }
 
     @PostMapping("/change-password")
@@ -148,45 +165,42 @@ public class AuthController {
             Authentication authentication) {
 
         if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiError("UNAUTHENTICATED", "Authentication required"));
         }
 
         User user = (User) authentication.getPrincipal();
-        Map<String, String> response = new HashMap<>();
         try {
             userService.changePassword(
                     user,
                     changePasswordRequest.getCurrentPassword(),
                     changePasswordRequest.getNewPassword());
 
-            response.put("message", "Password updated successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new MessageResponse("Password updated successfully"));
 
         } catch (IllegalArgumentException e) {
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest()
+                    .body(new ApiError("INVALID_PASSWORD", "Current password is incorrect"));
         } catch (Exception e) {
-            response.put("message", "Failed to update password");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiError("PASSWORD_UPDATE_FAILED", "Unable to update password"));
         }
     }
 
     @PostMapping("/delete-account")
     public ResponseEntity<?> deleteAccount(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiError("UNAUTHENTICATED", "Authentication required"));
         }
 
         User user = (User) authentication.getPrincipal();
-        Map<String, String> response = new HashMap<>();
-
         try {
             userService.deleteAccount(user);
-            response.put("message", "Account deleted successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new MessageResponse("Account deleted successfully"));
         } catch (Exception e) {
-            response.put("message", "Failed to delete account: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiError("ACCOUNT_DELETE_FAILED", "Unable to delete account"));
         }
     }
 }

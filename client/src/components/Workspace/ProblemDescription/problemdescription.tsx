@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ThumbsUp, ChevronDown, ChevronRight, LoaderCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import SolutionPanel from '@/components/SolutionPanel/solution-panel';
-import { Solution, MethodSignature } from '@/services/problemService';
+import { MethodSignature } from '@/services/problemService';
 import ReactMarkdown from 'react-markdown';
 import TreeSVG from './TreeSVG';
 import { arrayToTree } from '@/lib/utils';
@@ -50,15 +49,6 @@ interface ProblemDescriptionProps {
   showTabs?: boolean; // Whether to show the tab navigation
   className?: string; // Additional CSS class names
   problem?: {
-    solutions?: {
-      [key: string]: Solution;
-    };
-    timeComplexity?: {
-      [key: string]: string;
-    };
-    spaceComplexity?: {
-      [key: string]: string;
-    };
     methodSignature?: MethodSignature;
   };
   problemId?: number; // Add problemId prop
@@ -378,18 +368,6 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
 
   // Render the solution content
   const renderSolutionContent = () => {
-    // Get solutions from the problem data if available
-    if (problem?.solutions) {
-      return (
-        <SolutionPanel 
-          solutions={problem.solutions}
-          timeComplexity={problem.timeComplexity}
-          spaceComplexity={problem.spaceComplexity}
-        />
-      );
-    }
-
-    // Show a message when no solutions are available
     return (
       <Card className={cn("border border-gray-200 dark:border-gray-800", className)}>
         <CardHeader>

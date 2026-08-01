@@ -18,6 +18,7 @@ interface PlaygroundProps {
   onCodeChange: (code: string) => void;
   onLanguageChange: (language: string) => void;
   isRunning: boolean;
+  executionError?: string;
   onRunTests?: () => Promise<void>;
   onSubmit?: () => Promise<void>;
   canSubmit?: boolean;
@@ -30,6 +31,7 @@ const Playground = forwardRef<any, PlaygroundProps>(({
   onCodeChange,
   onLanguageChange,
   isRunning,
+  executionError = '',
   onRunTests,
   onSubmit,
   canSubmit = true,
@@ -136,6 +138,15 @@ const Playground = forwardRef<any, PlaygroundProps>(({
           </button>
         </div>
       </div>
+
+      {executionError && (
+        <div
+          role="alert"
+          className="border-b border-red-800/60 bg-red-950/50 px-4 py-2 text-sm text-red-200"
+        >
+          {executionError}
+        </div>
+      )}
 
       {/* Editor */}
       <motion.div

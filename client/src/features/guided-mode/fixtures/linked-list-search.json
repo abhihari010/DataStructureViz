@@ -1,0 +1,100 @@
+{
+  "kind": "guided-trace",
+  "algorithmId": "linked-list-search",
+  "problemId": "guided-linked-list-search",
+  "events": [
+    {
+      "stepId": "linked-list-search:step-0",
+      "codeLine": 1,
+      "state": {
+        "structure": "linked-list",
+        "status": "initial",
+        "nodes": [
+          { "id": "node-0", "value": 8, "nextId": "node-1" },
+          { "id": "node-1", "value": 17, "nextId": "node-2" },
+          { "id": "node-2", "value": 23, "nextId": null }
+        ],
+        "currentIndex": null,
+        "visitedIndices": [],
+        "target": 17,
+        "resultIndex": null
+      },
+      "narration": "Start at the head and search for 17."
+    },
+    {
+      "stepId": "linked-list-search:step-1",
+      "codeLine": 3,
+      "state": {
+        "structure": "linked-list",
+        "status": "searching",
+        "nodes": [
+          { "id": "node-0", "value": 8, "nextId": "node-1" },
+          { "id": "node-1", "value": 17, "nextId": "node-2" },
+          { "id": "node-2", "value": 23, "nextId": null }
+        ],
+        "currentIndex": 0,
+        "visitedIndices": [0],
+        "target": 17,
+        "resultIndex": null
+      },
+      "narration": "Inspect node 1: 8 does not match 17.",
+      "focus": { "kind": "linked-list-node", "nodeId": "node-0" }
+    },
+    {
+      "stepId": "linked-list-search:step-2",
+      "codeLine": 3,
+      "state": {
+        "structure": "linked-list",
+        "status": "searching",
+        "nodes": [
+          { "id": "node-0", "value": 8, "nextId": "node-1" },
+          { "id": "node-1", "value": 17, "nextId": "node-2" },
+          { "id": "node-2", "value": 23, "nextId": null }
+        ],
+        "currentIndex": 1,
+        "visitedIndices": [0, 1],
+        "target": 17,
+        "resultIndex": null
+      },
+      "narration": "Inspect node 2: 17 matches 17.",
+      "focus": { "kind": "linked-list-node", "nodeId": "node-1" }
+    },
+    {
+      "stepId": "linked-list-search:step-3",
+      "codeLine": 4,
+      "state": {
+        "structure": "linked-list",
+        "status": "found",
+        "nodes": [
+          { "id": "node-0", "value": 8, "nextId": "node-1" },
+          { "id": "node-1", "value": 17, "nextId": "node-2" },
+          { "id": "node-2", "value": 23, "nextId": null }
+        ],
+        "currentIndex": 1,
+        "visitedIndices": [0, 1],
+        "target": 17,
+        "resultIndex": 1
+      },
+      "narration": "The target is found at node 2.",
+      "focus": { "kind": "linked-list-node", "nodeId": "node-1" }
+    },
+    {
+      "stepId": "linked-list-search:step-4",
+      "codeLine": 6,
+      "state": {
+        "structure": "linked-list",
+        "status": "complete",
+        "nodes": [
+          { "id": "node-0", "value": 8, "nextId": "node-1" },
+          { "id": "node-1", "value": 17, "nextId": "node-2" },
+          { "id": "node-2", "value": 23, "nextId": null }
+        ],
+        "currentIndex": null,
+        "visitedIndices": [0, 1],
+        "target": 17,
+        "resultIndex": 1
+      },
+      "narration": "The guided search is complete."
+    }
+  ]
+}

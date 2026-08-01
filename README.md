@@ -18,6 +18,8 @@
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
   - [Running with Docker](#running-with-docker)
+- [Testing](#testing)
+- [Deployment and Operations](#deployment-and-operations)
 - [Usage](#usage)
 - [Extending the Platform](#extending-the-platform)
 - [Contributing](#contributing)
@@ -43,7 +45,7 @@ Perfect for students, interview preparation, and anyone looking to strengthen th
 - **Code Execution:** Write and run code in Java, Python, JavaScript, and C++ with instant feedback
 - **Visualizations:** See step-by-step visualizations for algorithms like BFS, DFS, sorting, and more
 - **User Authentication:** Register, login, password reset, and email verification
-- **Progress Tracking:** Track solved problems and progress (future/optional)
+- **Progress Tracking:** Track drafts, attempts, verified submissions, and activity
 - **Responsive UI:** Modern, mobile-friendly interface
 - **Extensible:** Easily add new problems, topics, or languages
 
@@ -102,9 +104,27 @@ DataStructureViz/
    JUDGE0_API_KEY=your_rapidapi_key
    JUDGE0_API_HOST=judge0-ce.p.rapidapi.com
    JWT_SECRET=your_jwt_secret
-   SUPPORT_EMAIL=your_email@gmail.com
-   SUPPORT_EMAIL_PASSWORD=your_email_password
+   FRONTEND_URL=http://localhost:5173
+   MAILJET_API_KEY=your_mailjet_api_key
+   MAILJET_SECRET_KEY=your_mailjet_secret_key
+   MAILJET_SENDER_EMAIL=noreply@example.com
+   MAILJET_SENDER_NAME=DSA Visualizer
    ```
+
+   For an H2-based local run, keep machine-specific values in the ignored
+   `backend/src/main/resources/application-local.properties` and start with the
+   `local` profile:
+
+   ```sh
+   cd backend
+   mvn spring-boot:run -Dspring-boot.run.profiles=local
+   ```
+
+   Do not commit that file or place Judge0, database, JWT, or mail credentials
+   in the client bundle. The public operational endpoints are
+   `GET /api/health` (lightweight liveness) and `GET /api/health/readiness`
+   (database-required readiness; Judge0 is reported as degraded and does not
+   block readiness).
 
 2. **Install Dependencies & Build**
 
@@ -129,7 +149,7 @@ DataStructureViz/
 
    ```sh
    cd client
-   npm install
+   npm ci
    ```
 
 2. **Run the Frontend**
@@ -156,13 +176,67 @@ DataStructureViz/
 
 ---
 
+## Testing
+
+From the repository root, run the same gates used by CI:
+
+```sh
+cd backend
+mvn -B test
+
+cd ../client
+npm ci
+npm test
+npm run check
+npm run build
+```
+
+Backend tests use H2 and mock Judge0 with a local HTTP server, so they do not
+need database, mail, JWT, or Judge0 credentials and do not consume provider
+quota. CI also retains Maven Surefire output, client test logs, and dependency
+reports as workflow artifacts. The client build checks that its largest
+uncompressed JavaScript asset stays below 700 kB.
+
+More detailed operational notes are in
+[`docs/testing-and-operations.md`](docs/testing-and-operations.md).
+
+---
+
+## Deployment and Operations
+
+The backend deployment configuration is Fly.io (`backend/fly.toml`). Set
+runtime secrets in the deployment environment, never in Git or `VITE_*`
+variables. The important operational endpoints are:
+
+- `GET /api/health` — lightweight liveness; returns `200` without a database
+  check.
+- `GET /api/health/readiness` — database-required readiness; returns `503`
+  when the database is unavailable and reports Judge0 as `DEGRADED` without
+  exposing provider details or blocking basic readiness.
+
+Configure `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`,
+`JWT_SECRET`, `JUDGE0_API_URL`, `JUDGE0_API_KEY`, `JUDGE0_API_HOST`, and
+`FRONTEND_URL` in the backend environment. Mailjet variables are additionally
+required for email flows. RapidAPI/Judge0 credentials are server-only. Keep
+local overrides in the ignored
+`backend/src/main/resources/application-local.properties` file.
+
+CI runs backend tests, the existing client test script, type-checking, the
+production build, a 700 kB bundle-budget report, npm audit, Maven dependency
+inventory, and pull-request dependency review. Audit output is retained for
+triage; test and build failures remain blocking. See the
+[`docs/testing-and-operations.md`](docs/testing-and-operations.md) runbook for
+the concise Judge0 and deployment checklist.
+
+---
+
 ## Usage
 
 - **Visit the app:** Open `http://localhost:5173` in your browser.
 - **Register/Login:** Create an account or log in.
 - **Browse Problems:** Go to the Practice page to browse problems by topic.
 - **Solve & Visualize:** Write code, run it, and see visualizations for supported problems.
-- **Track Progress:** (Future) Your solved problems and stats will be tracked.
+- **Track Progress:** Review saved drafts, attempts, verified completions, and activity.
 
 ---
 

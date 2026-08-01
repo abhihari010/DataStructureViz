@@ -1,0 +1,2 @@
+# Local Spring profile may contain database and provider credentials.
+/backend/src/main/resources/application-local.properties

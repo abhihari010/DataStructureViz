@@ -1,6 +1,7 @@
 package com.dsavisualizer.service;
 
 import com.dsavisualizer.dto.RegisterRequest;
+import com.dsavisualizer.dto.ProfileUpdateRequest;
 import com.dsavisualizer.entity.User;
 import com.dsavisualizer.repository.UserRepository;
 import com.dsavisualizer.repository.UserProgressRepository;
@@ -69,6 +70,18 @@ public class UserService implements UserDetailsService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    @Transactional
+    public User updateProfile(User user, ProfileUpdateRequest request) {
+        String requestedEmail = request.email().trim();
+        if (!requestedEmail.equalsIgnoreCase(user.getEmail())) {
+            throw new EmailVerificationRequiredException();
+        }
+
+        user.setFirstName(request.firstName().trim());
+        user.setLastName(request.lastName().trim());
+        return userRepository.save(user);
     }
 
     @Transactional

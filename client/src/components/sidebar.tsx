@@ -18,7 +18,7 @@ import {
   Grid2X2,
 } from "lucide-react";
 import { progressApi } from "@/lib/api";
-import type { UserProgress } from "@shared/schema";
+import type { UserProgress } from "@/lib/api";
 
 const primaryRoutes = [
   { name: "Dashboard", icon: Home, path: "/" },
@@ -47,7 +47,7 @@ type SidebarProps = {
 export default function Sidebar({ onClose, open = false }: SidebarProps) {
   const [location] = useLocation();
   const { data: progress = [] } = useQuery<UserProgress[]>({
-    queryKey: ["/api/progress"],
+    queryKey: ["/progress"],
     queryFn: progressApi.getUserProgress,
   });
 

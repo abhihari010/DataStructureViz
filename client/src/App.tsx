@@ -1,32 +1,34 @@
 import { Switch, Route, Redirect } from "wouter";
+import { lazy, Suspense } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
 import { queryClient } from "@/lib/queryClient";
-import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
-import Home from "@/pages/home";
-import Stack from "@/pages/stack";
-import Queue from "@/pages/queue";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import VerifyEmail from "@/pages/verify-email";
-import LinkedList from "@/pages/linked-list";
-import BinaryTree from "@/pages/binary-tree";
-import Settings from "@/pages/settings";
-import ResetPassword from "@/pages/reset-password";
-import VerifyOtp from "@/pages/verify-otp";
-import ForgotPassword from "@/pages/forgot-password";
-import Topics from "@/pages/topics";
-import ProblemPage from "@/pages/problems/[pid]";
-import Graph from "@/pages/graph";
-import Practice from "@/pages/practice";
-import BubbleSort from "@/pages/bubble-sort";
-import QuickSort from "@/pages/quick-sort";
-import DFS from "@/pages/dfs";
-import BFS from "@/pages/bfs";
-import Dijkstra from "@/pages/dijkstra";
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Landing = lazy(() => import("@/pages/landing"));
+const Home = lazy(() => import("@/pages/home"));
+const Stack = lazy(() => import("@/pages/stack"));
+const Queue = lazy(() => import("@/pages/queue"));
+const Login = lazy(() => import("@/pages/login"));
+const Register = lazy(() => import("@/pages/register"));
+const VerifyEmail = lazy(() => import("@/pages/verify-email"));
+const LinkedList = lazy(() => import("@/pages/linked-list"));
+const BinaryTree = lazy(() => import("@/pages/binary-tree"));
+const Settings = lazy(() => import("@/pages/settings"));
+const ResetPassword = lazy(() => import("@/pages/reset-password"));
+const VerifyOtp = lazy(() => import("@/pages/verify-otp"));
+const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
+const Topics = lazy(() => import("@/pages/topics"));
+const ProblemPage = lazy(() => import("@/pages/problems/[pid]"));
+const Graph = lazy(() => import("@/pages/graph"));
+const Practice = lazy(() => import("@/pages/practice"));
+const BubbleSort = lazy(() => import("@/pages/bubble-sort"));
+const QuickSort = lazy(() => import("@/pages/quick-sort"));
+const DFS = lazy(() => import("@/pages/dfs"));
+const BFS = lazy(() => import("@/pages/bfs"));
+const Dijkstra = lazy(() => import("@/pages/dijkstra"));
+const GuidedMode = lazy(() => import("@/pages/guided-mode"));
 
 function Router() {
   const { isAuthenticated, isLoading, isAuthTransitioning } = useAuthJWT();
@@ -43,6 +45,7 @@ function Router() {
   }
 
   return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#151816] text-[#f2f0e9]" role="status">Loading page…</div>}>
     <Switch>
       {!isAuthenticated ? (
         <>
@@ -71,6 +74,7 @@ function Router() {
           <Route path="/dfs" component={DFS} />
           <Route path="/bfs" component={BFS} />
           <Route path="/dijkstra" component={Dijkstra} />
+          <Route path="/guided/:algorithm" component={GuidedMode} />
           {/* Redirect authenticated users trying to access public routes */}
           <Route path="/login" component={() => <Redirect to="/" />} />
           <Route path="/register" component={() => <Redirect to="/" />} />
@@ -85,6 +89,7 @@ function Router() {
       )}
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 

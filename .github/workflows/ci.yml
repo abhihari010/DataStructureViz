@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-test:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run Maven tests
+        shell: bash
+        run: |
+          set -o pipefail
+          mvn -B test 2>&1 | tee ../backend-test.log
+
+      - name: Retain backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/target/surefire-reports
+            backend-test.log
+          if-no-files-found: ignore
+
+  frontend-check:
+    name: Frontend tests and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run client tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee ../client-test.log
+
+      - name: Type-check client
+        run: npm run check
+
+      - name: Build client
+        run: npm run build
+
+      - name: Check JavaScript bundle budget
+        shell: bash
+        run: |
+          set -o pipefail
+          node <<'NODE' | tee ../client-bundle-budget.txt
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const assetsDirectory = path.join('dist', 'public', 'assets');
+          const maxBytes = 700 * 1024;
+          const javascriptFiles = fs.readdirSync(assetsDirectory)
+            .filter((file) => file.endsWith('.js'))
+            .map((file) => ({
+              file,
+              bytes: fs.statSync(path.join(assetsDirectory, file)).size,
+            }))
+            .sort((left, right) => right.bytes - left.bytes);
+
+          if (javascriptFiles.length === 0) {
+            console.error('Bundle budget check failed: no JavaScript assets were produced.');
+            process.exit(1);
+          }
+
+          const largest = javascriptFiles[0];
+          console.log(`Largest JavaScript asset: ${largest.file} (${largest.bytes} bytes)`);
+          console.log(`Budget: ${maxBytes} bytes (700 kB uncompressed)`);
+
+          if (largest.bytes > maxBytes) {
+            console.error('Bundle budget exceeded. Split or lazy-load the affected entry before merging.');
+            process.exit(1);
+          }
+          NODE
+
+      - name: Retain frontend test and build reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-and-build-reports
+          path: |
+            client-test.log
+            client-bundle-budget.txt
+          if-no-files-found: ignore
+
+  dependency-report:
+    name: Dependency and security reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install locked client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Audit client dependencies
+        working-directory: client
+        shell: bash
+        run: |
+          set +e
+          npm audit --audit-level=high --json > npm-audit.json 2> npm-audit.stderr
+          audit_status=$?
+          echo "npm audit exit code: ${audit_status}"
+          echo "The report is retained for triage; dependency findings do not replace the test/build gates."
+          exit 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Generate Maven dependency inventory
+        working-directory: backend
+        run: mvn -B dependency:tree -DoutputFile=dependency-tree.txt
+
+      - name: Retain dependency and security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-security-reports
+          path: |
+            client/npm-audit.json
+            client/npm-audit.stderr
+            backend/dependency-tree.txt
+          if-no-files-found: ignore
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4

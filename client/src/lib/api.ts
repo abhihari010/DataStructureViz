@@ -1,9 +1,28 @@
 /// <reference types="vite/client" />
 import axios from "axios";
 
-// Create axios instance with default config
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+
+/** Convert legacy React Query keys into paths relative to the API base URL. */
+export function toApiPath(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const basePath = API_BASE_URL.startsWith("http")
+    ? new URL(API_BASE_URL).pathname
+    : API_BASE_URL;
+  const normalizedBasePath = basePath.replace(/\/$/, "");
+
+  if (normalizedBasePath && path.startsWith(`${normalizedBasePath}/`)) {
+    return path.slice(normalizedBasePath.length) || "/";
+  }
+
+  // Keep old query keys working while callers move to canonical paths.
+  if (path.startsWith("/api/")) return path.slice("/api".length);
+  return path;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -81,11 +100,40 @@ export const auth = {
   login: (data: LoginRequest) => api.post("/auth/login", data),
   logout: () => api.post("/auth/logout"),
 
-  getCurrentUser: () => api.get("/auth/user"),
+  getCurrentUser: () => api.get<User>("/auth/user"),
+  verifyEmail: (token: string) =>
+    api.get<ResetMessage>("/auth/verify", { params: { token } }),
+  resendVerification: (email: string) =>
+    api.post<ResetMessage>("/auth/resend-verification", null, { params: { email } }),
+  updateProfile: (data: ProfileUpdateRequest) => api.patch("/auth/profile", data),
   changePassword: (data: ChangePasswordRequest) =>
     api.post("/auth/change-password", data),
   deleteAccount: () => api.post("/auth/delete-account"),
 };
+
+export const passwordReset = {
+  request: (email: string) =>
+    api.post<ResetMessage>(`/forgot-password/sendMail/${encodeURIComponent(email)}`),
+  verifyOtp: (email: string, otp: string) =>
+    api.post<ResetProofResponse>(
+      `/forgot-password/verifyOtp/${encodeURIComponent(otp)}/${encodeURIComponent(email)}`,
+    ),
+  reset: (email: string, data: ResetPasswordRequest) =>
+    api.post<ResetMessage>(
+      `/forgot-password/changePassword/${encodeURIComponent(email)}`,
+      data,
+    ),
+};
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const response = error.response?.data;
+    if (typeof response?.message === "string") {
+      return response.message;
+    }
+  }
+  return fallback;
+}
 
 // Types
 export interface RegisterRequest {
@@ -105,12 +153,46 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface ProfileUpdateRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  password: string;
+  repeatPassword: string;
+  resetProof: string;
+}
+
+export interface ResetMessage {
+  message: string;
+}
+
+export interface ResetProofResponse extends ResetMessage {
+  resetProof: string;
+  expiresAt: string;
+}
+
 export interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
   avatar?: string;
+  profileImageUrl?: string;
+}
+
+export interface UserProgress {
+  id: number;
+  userId: string;
+  topicId: string;
+  completed: boolean;
+  score: number;
+  timeSpent: number;
+  completedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export default api;

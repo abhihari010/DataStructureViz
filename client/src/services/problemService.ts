@@ -1,9 +1,8 @@
 import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+import api from '@/lib/api';
 
 export interface Example {
-  id: number;
+  id?: number;
   input: string;
   output: string;
   explanation?: string;
@@ -12,12 +11,6 @@ export interface Example {
 export interface Constraint {
   id: string;
   constraint: string;
-}
-
-export interface Solution {
-  code: string;
-  timeComplexity: string;
-  spaceComplexity: string;
 }
 
 export interface MethodSignature {
@@ -36,29 +29,17 @@ export interface PracticeProblem {
   description: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   topicId: string;
-  testCases: string;
-  solutions?: {
-    [key: string]: Solution;
-  };
-  timeComplexity?: {
-    [key: string]: string;
-  };
-  spaceComplexity?: {
-    [key: string]: string;
-  };
+  examples?: Example[];
   boilerPlateCode?: string;
   createdAt: string;
   topic?: string;
-  examples?: Example[];
   constraints?: Constraint[];
-  // For backward compatibility
-  solution?: string;
   methodSignature?: MethodSignature;
 }
 
 export const getProblemById = async (id: number): Promise<PracticeProblem> => {
   try {
-    const response = await axios.get<PracticeProblem>(`${API_BASE_URL}/problems/${id}`);
+    const response = await api.get<PracticeProblem>(`/problems/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching problem:', error);
@@ -68,7 +49,7 @@ export const getProblemById = async (id: number): Promise<PracticeProblem> => {
 
 export const getProblemsByTopic = async (topicId: string): Promise<PracticeProblem[]> => {
   try {
-    const response = await axios.get<PracticeProblem[]>(`${API_BASE_URL}/problems?topicId=${topicId}`);
+    const response = await api.get<PracticeProblem[]>('/problems', { params: { topicId } });
     return response.data;
   } catch (error) {
     console.error('Error fetching problems by topic:', error);
@@ -78,7 +59,7 @@ export const getProblemsByTopic = async (topicId: string): Promise<PracticeProbl
 
 export const getAllProblems = async (): Promise<PracticeProblem[]> => {
   try {
-    const response = await axios.get<PracticeProblem[]>(`${API_BASE_URL}/problems`);
+    const response = await api.get<PracticeProblem[]>('/problems');
     return response.data;
   } catch (error) {
     console.error('Error fetching all problems:', error);
@@ -101,33 +82,94 @@ export interface ExecuteCodeRequest {
 }
 
 export interface ExecuteCodeResponse {
+  contract_version: 'v1' | string;
+  receipt?: ExecutionReceipt;
+  status: ExecutionStatus;
+  failure_code?: string;
   success: boolean;
-  output: string;
+  output?: string;
   error?: string;
+  message?: string;
   passed: boolean;
+  runtime?: number;
+  memory?: number;
   results?: TestCaseResult[];
   test_case_results?: TestCaseResult[];
 }
 
+export type ExecutionStatus =
+  | 'ACCEPTED'
+  | 'WRONG_ANSWER'
+  | 'COMPILE_ERROR'
+  | 'RUNTIME_ERROR'
+  | 'TIME_LIMIT_EXCEEDED'
+  | 'VALIDATION_ERROR'
+  | 'RATE_LIMITED'
+  | 'PROBLEM_NOT_FOUND'
+  | 'NO_TEST_CASES'
+  | 'PROVIDER_ERROR'
+  | 'PROVIDER_QUOTA'
+  | 'INTERNAL_ERROR'
+  | string;
+
+export interface ExecutionReceipt {
+  receipt_id: string;
+}
+
+export class ExecutionRequestError extends Error {
+  readonly code: ExecutionStatus;
+  readonly httpStatus?: number;
+  readonly retryable: boolean;
+
+  constructor(message: string, code: ExecutionStatus = 'INTERNAL_ERROR', httpStatus?: number) {
+    super(message);
+    this.name = 'ExecutionRequestError';
+    this.code = code;
+    this.httpStatus = httpStatus;
+    this.retryable = code === 'RATE_LIMITED' || code === 'PROVIDER_ERROR' || code === 'PROVIDER_QUOTA';
+  }
+}
+
 export const executeCode = async (request: ExecuteCodeRequest): Promise<ExecuteCodeResponse> => {
   try {
-    const response = await axios.post<ExecuteCodeResponse>(
-      `${API_BASE_URL}/execute`,
-      request
-    );
+    const response = await api.post<ExecuteCodeResponse>('/execute', request);
     return response.data;
   } catch (error) {
-    console.error('Error executing code:', error);
-    throw error;
+    if (axios.isAxiosError<ExecuteCodeResponse>(error)) {
+      const payload = error.response?.data;
+      throw new ExecutionRequestError(
+        payload?.message || payload?.error || 'Code execution failed. Please try again.',
+        payload?.status || (error.response?.status === 429 ? 'RATE_LIMITED' : 'INTERNAL_ERROR'),
+        error.response?.status,
+      );
+    }
+    throw new ExecutionRequestError('Code execution failed. Please try again.');
   }
 };
 
-export async function submitSolutionApi({ code, language, problemId }: { code: string, language: string, problemId: number }) {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-  return fetch(`${apiBase}/submit`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, language, problemId }),
-  }).then(res => res.json());
+export async function submitSolutionApi({
+  code,
+  language,
+  problemId,
+  receiptId,
+  runtime,
+  memory,
+}: {
+  code: string;
+  language: string;
+  problemId: number;
+  receiptId: string;
+  runtime?: number;
+  memory?: number;
+}) {
+  const response = await api.post('/solutions', {
+    problemId,
+    code,
+    language,
+    receipt_id: receiptId,
+    runtime,
+    memory,
+  });
+  return response.data;
 }
 

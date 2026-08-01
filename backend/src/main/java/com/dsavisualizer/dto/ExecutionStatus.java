@@ -1,0 +1,16 @@
+package com.dsavisualizer.dto;
+
+public enum ExecutionStatus {
+    ACCEPTED,
+    WRONG_ANSWER,
+    COMPILE_ERROR,
+    RUNTIME_ERROR,
+    TIME_LIMIT_EXCEEDED,
+    VALIDATION_ERROR,
+    RATE_LIMITED,
+    PROBLEM_NOT_FOUND,
+    NO_TEST_CASES,
+    PROVIDER_ERROR,
+    PROVIDER_QUOTA,
+    INTERNAL_ERROR
+}

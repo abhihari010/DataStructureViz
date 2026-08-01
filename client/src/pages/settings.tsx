@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
-import { User, auth } from "@/lib/api";
+import { User, auth, getApiErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Pencil, Save, User as UserIcon, Mail, Lock, Check, Trash2 } from "lucide-react";
@@ -88,17 +88,16 @@ export default function SettingsPage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { firstName: string; lastName: string; email: string }) => {
-      const response = await auth.getCurrentUser();
-
-      return { ...response.data, ...data };
+      const response = await auth.updateProfile(data);
+      return response.data;
     },
     onSuccess: (updatedUser: User) => {
-      queryClient.setQueryData(['/api/auth/user'], updatedUser);
+      queryClient.setQueryData(['/auth/user'], updatedUser);
       toast.success('Profile updated successfully');
       setIsEditing(false);
     },
-    onError: () => {
-      toast.error('Failed to update profile');
+    onError: (error: unknown) => {
+      toast.error(getApiErrorMessage(error, 'Failed to update profile'));
     },
   });
 
@@ -126,7 +125,7 @@ export default function SettingsPage() {
       }, 1000);
     },
     onError: (error: any) => {
-      const errorMessage = error.message || 'Failed to update password. Please try again.';
+      const errorMessage = getApiErrorMessage(error, 'Failed to update password. Please try again.');
       toast.error(errorMessage);
     },
   });
@@ -364,7 +363,7 @@ export default function SettingsPage() {
                             message: 'Invalid email address',
                           },
                         })}
-                        disabled={updateProfileMutation.isPending}
+                        disabled={true}
                       />
                     </div>
                   </div>
@@ -377,6 +376,9 @@ export default function SettingsPage() {
                 {profileErrors.email && (
                   <p className="text-sm text-red-500">{profileErrors.email.message}</p>
                 )}
+                <p className="text-xs text-muted-foreground">
+                  Email changes require verification and are not available from this form.
+                </p>
               </div>
             </div>
           </div>

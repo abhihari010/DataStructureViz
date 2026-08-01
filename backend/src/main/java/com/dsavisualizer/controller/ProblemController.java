@@ -1,6 +1,6 @@
 package com.dsavisualizer.controller;
 
-import com.dsavisualizer.entity.PracticeProblem;
+import com.dsavisualizer.dto.PublicProblemDto;
 import com.dsavisualizer.repository.PracticeProblemRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,21 +19,21 @@ public class ProblemController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PracticeProblem>> getProblems(@RequestParam(required = false) String topicId) {
-        List<PracticeProblem> problems;
+    public ResponseEntity<List<PublicProblemDto>> getProblems(@RequestParam(required = false) String topicId) {
+        List<com.dsavisualizer.entity.PracticeProblem> problems;
         if (topicId != null && !topicId.isEmpty()) {
             problems = practiceProblemRepository.findByTopicId(topicId);
         } else {
             problems = practiceProblemRepository.findAll();
         }
-        return ResponseEntity.ok(problems);
+        return ResponseEntity.ok(problems.stream().map(PublicProblemDto::from).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PracticeProblem> getProblem(@PathVariable Long id) {
-        Optional<PracticeProblem> problem = practiceProblemRepository.findById(id);
+    public ResponseEntity<PublicProblemDto> getProblem(@PathVariable Long id) {
+        Optional<com.dsavisualizer.entity.PracticeProblem> problem = practiceProblemRepository.findById(id);
         if (problem.isPresent()) {
-            return ResponseEntity.ok(problem.get());
+            return ResponseEntity.ok(PublicProblemDto.from(problem.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
