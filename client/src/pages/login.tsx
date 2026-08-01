@@ -15,7 +15,7 @@ import { Link } from "wouter";
 import { AuthLayout } from "@/components/auth-layout";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthJWT } from "@/hooks/useAuthJWT";
-import api from "@/lib/api";
+import api, { getApiErrorMessage } from "@/lib/api";
 
 type LoginFormData = {
   email: string;
@@ -68,15 +68,21 @@ export default function Login() {
       let errorMessage = "Something interrupted sign in. Try again.";
 
       if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-        if (error.response.data.needsVerification === "true") {
+        errorMessage = getApiErrorMessage(error, errorMessage);
+        if (
+          error.response.data.needsVerification === true ||
+          error.response.data.needsVerification === "true"
+        ) {
           setIsEmailNotVerified(true);
           setUserEmail(error.response.data.email || data.email);
         }
       } else if (error?.response?.status === 401) {
-        errorMessage = "Email or password did not match.";
+        errorMessage = getApiErrorMessage(
+          error,
+          "Email or password is incorrect.",
+        );
       } else if (error?.message) {
-        errorMessage = error.message;
+        errorMessage = getApiErrorMessage(error, error.message);
       }
 
       setServerError(errorMessage);
@@ -103,9 +109,10 @@ export default function Login() {
       toast({
         variant: "destructive",
         title: "Email not sent",
-        description:
-          error?.response?.data?.message ||
+        description: getApiErrorMessage(
+          error,
           "The verification email could not be sent. Try again.",
+        ),
       });
     }
   };

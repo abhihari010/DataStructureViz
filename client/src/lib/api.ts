@@ -131,6 +131,12 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (typeof response?.message === "string") {
       return response.message;
     }
+    if (typeof response === "string" && response.trim()) {
+      return response;
+    }
+    if (typeof response?.error === "string") {
+      return response.error;
+    }
   }
   return fallback;
 }

@@ -17,7 +17,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { AuthLayout } from "@/components/auth-layout";
 import { useToast } from "@/hooks/use-toast";
-import { auth } from "@/lib/api";
+import { auth, getApiErrorMessage } from "@/lib/api";
 
 const registerSchema = z
   .object({
@@ -105,17 +105,14 @@ export default function Register() {
         setLocation("/login");
       }, 2000);
     } catch (error) {
-      let errorMessage = "Your account could not be created. Try again.";
-
-      if (axios.isAxiosError(error) && error.response?.data) {
-        const responseMessage = error.response.data.message || error.response.data;
-        errorMessage =
-          typeof responseMessage === "object"
-            ? Object.values(responseMessage).join(", ")
-            : String(responseMessage);
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      const isDuplicateEmail =
+        axios.isAxiosError(error) && error.response?.status === 409;
+      const errorMessage = getApiErrorMessage(
+        error,
+        isDuplicateEmail
+          ? "An account with this email already exists. Try signing in or resetting your password."
+          : "Your account could not be created. Try again.",
+      );
 
       setServerError(errorMessage);
       window.scrollTo({ top: 0 });

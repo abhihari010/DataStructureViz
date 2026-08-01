@@ -12,11 +12,13 @@ import com.dsavisualizer.security.JwtUtil;
 import com.dsavisualizer.service.EmailVerificationRequiredException;
 import com.dsavisualizer.service.UserService;
 import com.dsavisualizer.service.VerificationTokenService;
+import com.dsavisualizer.service.DuplicateEmailException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +49,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        User user = userService.createUser(registerRequest);
+        final User user;
+        try {
+            user = userService.createUser(registerRequest);
+        } catch (DuplicateEmailException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiError("EMAIL_ALREADY_REGISTERED",
+                            "An account with this email already exists. Try signing in or resetting your password."));
+        }
         verificationTokenService.createVerificationToken(user);
 
         Map<String, String> response = new HashMap<>();
@@ -83,6 +92,9 @@ public class AuthController {
             response.put("needsVerification", "true");
             response.put("email", loginRequest.getEmail());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiError("INVALID_CREDENTIALS", "Email or password is incorrect."));
         }
     }
 
