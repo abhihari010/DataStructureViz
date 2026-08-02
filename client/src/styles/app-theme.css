@@ -1161,6 +1161,46 @@
   color: var(--app-ink-soft);
 }
 
+.app-practice-tools {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) auto auto;
+}
+
+.app-practice-filters {
+  display: flex;
+  align-items: stretch;
+}
+
+.app-practice-filters label {
+  display: flex;
+  min-width: 8.5rem;
+  align-items: center;
+  border-right: 1px solid var(--app-rule);
+}
+
+.app-practice-filters select {
+  width: 100%;
+  min-height: 100%;
+  padding: 0 2.25rem 0 0.9rem;
+  border: 0;
+  outline: 0;
+  background: var(--app-paper);
+  color: var(--app-ink-soft);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app-practice-filters select:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--app-signal);
+}
+
+.app-practice-filters option {
+  background: var(--app-fog);
+  color: var(--app-ink);
+}
+
 .app-segmented-control {
   display: flex;
   align-items: stretch;
@@ -1709,6 +1749,20 @@
     display: none;
   }
 
+  .app-practice-tools {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .app-practice-filters {
+    grid-column: 1 / -1;
+    min-height: 58px;
+    border-top: 1px solid var(--app-rule);
+  }
+
+  .app-practice-filters label {
+    flex: 1;
+  }
+
   .app-primary-command {
     grid-column: 2;
     grid-row: 1;
@@ -1818,11 +1872,36 @@
     display: block;
   }
 
+  .app-practice-tools {
+    display: block;
+  }
+
   .app-index-search {
     width: 100%;
     min-width: 0;
     height: 62px;
     border-right: 0;
+  }
+
+  .app-practice-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 52px;
+    border-top: 1px solid var(--app-rule);
+  }
+
+  .app-practice-filters label {
+    min-width: 0;
+    border-right: 1px solid var(--app-rule);
+  }
+
+  .app-practice-filters label:last-child {
+    border-right: 0;
+  }
+
+  .app-practice-filters select {
+    padding-inline: 0.65rem;
+    font-size: 0.64rem;
   }
 
   .app-index-search input {
@@ -2181,6 +2260,26 @@
   --app-yellow: #f6c453;
   --app-rule: rgba(247, 241, 231, 0.15);
   --app-code: #111027;
+  --app-topbar-height: 72px;
+  --font-display: "Anybody Variable", "Arial Black", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", monospace;
+  --background: 246 36% 13%;
+  --foreground: 42 45% 94%;
+  --card: 247 35% 17%;
+  --card-foreground: 42 45% 94%;
+  --popover: 247 35% 17%;
+  --popover-foreground: 42 45% 94%;
+  --primary: 8 100% 68%;
+  --primary-foreground: 42 45% 94%;
+  --secondary: 248 32% 24%;
+  --secondary-foreground: 42 45% 94%;
+  --muted: 248 32% 24%;
+  --muted-foreground: 255 21% 75%;
+  --border: 248 22% 32%;
+  --input: 248 22% 32%;
+  --accent: 250 100% 80%;
+  --accent-foreground: 246 36% 13%;
+  --ring: 8 100% 68%;
   background: var(--app-paper);
 }
 
@@ -2232,6 +2331,7 @@
 }
 
 .app-topbar {
+  min-height: var(--app-topbar-height);
   background: color-mix(in srgb, var(--app-paper) 90%, transparent);
 }
 
@@ -2243,6 +2343,70 @@
 .app-user-avatar [data-radix-avatar-fallback] {
   background: var(--app-lilac);
   color: var(--app-paper);
+}
+
+/* Dropdown content is portalled to <body>, so it cannot inherit the shell's
+   indigo theme variables. Keep the account menu legible in its own portal. */
+.app-user-menu {
+  --popover: 248 35% 17%;
+  --popover-foreground: 42 33% 94%;
+  --accent: 255 100% 80%;
+  --accent-foreground: 247 241 231;
+  --muted: 247 241 231;
+  --border: 247 241 231;
+  width: min(17rem, calc(100vw - 1.5rem));
+  padding: 0.45rem;
+  border: 1px solid rgba(247, 241, 231, 0.18) !important;
+  border-radius: 12px !important;
+  background: #211d3c !important;
+  color: #f7f1e7 !important;
+  box-shadow: 0 20px 60px rgba(10, 8, 24, 0.42) !important;
+}
+
+.app-user-menu [role="menuitem"] {
+  min-height: 2.65rem;
+  color: #f7f1e7 !important;
+}
+
+.app-user-menu [role="menuitem"]:focus,
+.app-user-menu [role="menuitem"][data-highlighted] {
+  background: rgba(168, 150, 255, 0.18) !important;
+  color: #fff9f2 !important;
+}
+
+.app-user-menu [data-radix-dropdown-menu-separator] {
+  background: rgba(247, 241, 231, 0.14) !important;
+}
+
+/* Radix popovers are also portalled. Give authenticated controls the same
+   surface tokens when they render outside .app-shell. */
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content],
+[data-radix-tooltip-content] {
+  --popover: 247 35% 17%;
+  --popover-foreground: 42 45% 94%;
+  --accent: 250 100% 80%;
+  --accent-foreground: 246 36% 13%;
+  --muted: 248 32% 24%;
+  --muted-foreground: 255 21% 75%;
+  --background: 246 36% 13%;
+  --foreground: 42 45% 94%;
+  --border: 248 22% 32%;
+}
+
+[data-radix-select-content],
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content] {
+  background: #211d3c !important;
+  color: #f7f1e7 !important;
+}
+
+[data-radix-select-item]:focus,
+[data-radix-select-item][data-highlighted] {
+  background: rgba(168, 150, 255, 0.18) !important;
+  color: #fff9f2 !important;
 }
 
 .app-topic-header,

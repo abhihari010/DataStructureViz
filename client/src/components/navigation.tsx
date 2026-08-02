@@ -69,10 +69,18 @@ export default function Navigation({ onMenuToggle }: NavigationProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="app-user-trigger">
+          <Button
+            type="button"
+            variant="ghost"
+            className="app-user-trigger"
+            aria-label={`Open ${
+              [typedUser?.firstName, typedUser?.lastName].filter(Boolean).join(" ") ||
+              "account"
+            } menu`}
+          >
             <Avatar className="app-user-avatar">
               <AvatarImage
-                src={typedUser?.profileImageUrl}
+                src={typedUser?.profileImageUrl || typedUser?.avatar}
                 alt={`${typedUser?.firstName || ""} ${typedUser?.lastName || ""}`.trim()}
               />
               <AvatarFallback>{initials || <UserIcon aria-hidden="true" />}</AvatarFallback>
@@ -91,12 +99,12 @@ export default function Navigation({ onMenuToggle }: NavigationProps) {
             <span>{typedUser?.email}</span>
           </div>
           <DropdownMenuSeparator />
-          <Link href="/settings">
-            <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem asChild>
+            <Link href="/settings" className="cursor-pointer">
               <Settings aria-hidden="true" />
               Account settings
-            </DropdownMenuItem>
-          </Link>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={logout}>
             <LogOut aria-hidden="true" />
             Log out
