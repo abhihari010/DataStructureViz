@@ -1072,6 +1072,13 @@
 
   .landing-hero-copy {
     padding-top: 6vh;
+    padding-bottom: 17rem;
+  }
+
+  .landing-hero-visual {
+    bottom: -7rem;
+    height: 28rem;
+    opacity: 0.62;
   }
 
   .landing-hero-actions {
