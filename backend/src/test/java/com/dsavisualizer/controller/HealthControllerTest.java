@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.dsavisualizer.service.Judge0Service;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
@@ -28,11 +30,14 @@ class HealthControllerTest {
     @Mock
     private Connection connection;
 
+    @Mock
+    private Judge0Service judge0Service;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new HealthController(dataSource)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new HealthController(dataSource, judge0Service)).build();
     }
 
     @Test
@@ -45,28 +50,42 @@ class HealthControllerTest {
     }
 
     @Test
-    void readinessReportsDatabaseAndDegradedJudge0() throws Exception {
+    void readinessReportsDatabaseAndObservedJudge0Status() throws Exception {
         when(dataSource.getConnection()).thenReturn(connection);
         when(connection.isValid(2)).thenReturn(true);
+        when(judge0Service.healthStatus()).thenReturn("UP");
 
         mockMvc.perform(get("/health/readiness"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.components.database.status").value("UP"))
-                .andExpect(jsonPath("$.components.judge0.status").value("DEGRADED"));
+                .andExpect(jsonPath("$.components.judge0.status").value("UP"));
 
         verify(connection).close();
     }
 
     @Test
+    void readinessStaysUpWhenJudge0IsDownBecauseItIsNotRequiredToServeTraffic() throws Exception {
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.isValid(2)).thenReturn(true);
+        when(judge0Service.healthStatus()).thenReturn("DOWN");
+
+        mockMvc.perform(get("/health/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.components.judge0.status").value("DOWN"));
+    }
+
+    @Test
     void readinessFailsWhenTheDatabaseIsUnavailableWithoutExposingConnectionDetails() throws Exception {
         when(dataSource.getConnection()).thenThrow(new SQLException("password=do-not-leak"));
+        when(judge0Service.healthStatus()).thenReturn("UNKNOWN");
 
         mockMvc.perform(get("/health/readiness"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
                 .andExpect(jsonPath("$.components.database.status").value("DOWN"))
-                .andExpect(jsonPath("$.components.judge0.status").value("DEGRADED"))
+                .andExpect(jsonPath("$.components.judge0.status").value("UNKNOWN"))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("do-not-leak"))));
     }
 }

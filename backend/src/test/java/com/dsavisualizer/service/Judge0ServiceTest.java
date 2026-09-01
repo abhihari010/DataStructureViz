@@ -117,6 +117,46 @@ class Judge0ServiceTest {
                         .isEqualTo(com.dsavisualizer.dto.Judge0FailureType.TIMEOUT));
     }
 
+    @Test
+    void healthStatusIsUnknownUntilASubmissionHasActuallyHappened() {
+        assertThat(service(Duration.ofSeconds(2)).healthStatus()).isEqualTo("UNKNOWN");
+    }
+
+    @Test
+    void healthStatusReportsUpAfterASuccessfulSubmission() {
+        server.createContext("/submissions", exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            byte[] response = "{\"status\": {\"id\": 3, \"description\": \"Accepted\"}}"
+                    .getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length);
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write(response);
+            }
+        });
+
+        Judge0Service service = service(Duration.ofSeconds(2));
+        service.submitAndWait(new Judge0SubmissionRequest("print(42)", 71, "")).block(Duration.ofSeconds(5));
+
+        assertThat(service.healthStatus()).isEqualTo("UP");
+    }
+
+    @Test
+    void healthStatusReportsDownAfterTheProviderFails() {
+        server.createContext("/submissions", exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            exchange.sendResponseHeaders(500, -1);
+            exchange.close();
+        });
+
+        Judge0Service service = service(Duration.ofSeconds(2));
+        assertThatThrownBy(() -> service.submitAndWait(new Judge0SubmissionRequest("print(42)", 71, ""))
+                .block(Duration.ofSeconds(5)))
+                .isInstanceOf(Judge0ProviderException.class);
+
+        assertThat(service.healthStatus()).isEqualTo("DOWN");
+    }
+
     private Judge0Service service(Duration timeout) {
         String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
         return new Judge0Service(WebClient.builder(), baseUrl, "test-rapid-api-key",

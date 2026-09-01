@@ -13,14 +13,21 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 @Service
 public class Judge0Service {
 
+    /** Provider health is inferred from real traffic, so a quiet period reports UNKNOWN rather than a stale verdict. */
+    private static final Duration HEALTH_OUTCOME_TTL = Duration.ofMinutes(15);
+
     private final WebClient webClient;
     private final Duration requestTimeout;
+
+    private volatile Instant lastOutcomeAt;
+    private volatile boolean lastOutcomeFailed;
 
     @Autowired
     public Judge0Service(
@@ -81,7 +88,28 @@ public class Judge0Service {
                                 return new Judge0ProviderException(Judge0FailureType.UNAVAILABLE);
                             }
                             return new Judge0ProviderException(Judge0FailureType.PROVIDER_ERROR);
-                        });
+                        })
+                // Every Judge0 call routes through here, so health is observed once instead of at each caller.
+                .doOnNext(ignored -> recordOutcome(false))
+                .doOnError(ignored -> recordOutcome(true));
+    }
+
+    private void recordOutcome(boolean failed) {
+        this.lastOutcomeFailed = failed;
+        this.lastOutcomeAt = Instant.now();
+    }
+
+    /**
+     * Provider health derived from submissions that already happened. This deliberately issues no probe
+     * request: the readiness endpoint is polled continuously and Judge0 is billed per call, so an active
+     * check would drain the quota that real executions need.
+     */
+    public String healthStatus() {
+        Instant observedAt = this.lastOutcomeAt;
+        if (observedAt == null || Duration.between(observedAt, Instant.now()).compareTo(HEALTH_OUTCOME_TTL) > 0) {
+            return "UNKNOWN";
+        }
+        return this.lastOutcomeFailed ? "DOWN" : "UP";
     }
 
 
