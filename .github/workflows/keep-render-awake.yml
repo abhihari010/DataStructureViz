@@ -15,10 +15,12 @@ jobs:
     env:
       BACKEND_URL: https://datastructurevizbackend.onrender.com
     steps:
-      - name: Ping backend health endpoint
+      - name: Ping backend readiness endpoint
         run: |
+          # Readiness, not liveness: /api/health returns 200 without touching the database, so it
+          # stayed green through a multi-day database outage. This run must fail when the database does.
           curl --fail --silent --show-error \
             --retry 3 \
             --retry-delay 5 \
             --max-time 30 \
-            "$BACKEND_URL/api/health"
+            "$BACKEND_URL/api/health/readiness"
